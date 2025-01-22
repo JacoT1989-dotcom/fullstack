@@ -4,36 +4,28 @@ import { Lucia, Session, User } from "lucia";
 import { cookies } from "next/headers";
 import { cache } from "react";
 import prisma from "./lib/prisma";
+import { UserRole } from "@prisma/client";
 
-const adapter = new PrismaAdapter(prisma.session, prisma.users);
+const adapter = new PrismaAdapter(prisma.session, prisma.user);
 
 interface DatabaseUserAttributes {
-  user_id: number;
+  id: string;
   username: string;
+  firstName: string;
+  lastName: string;
+  displayName: string;
   email: string;
-  first_name: string;
-  last_name: string;
-  rsa_id: string | null;
-  cell_number: string | null;
-  physical_address: string | null;
-  profile_picture_url: string | null;
-  is_verified: boolean | null;
-  is_active: boolean | null;
-  role:
-    | "User"
-    | "SystemAdministrator"
-    | "SecurityAdministrator"
-    | "PermitAdministrator"
-    | "PermitHolder"
-    | "RightsHolder"
-    | "Skipper"
-    | "Inspector"
-    | "Monitor"
-    | "Driver"
-    | "FactoryStockController"
-    | "LocalOutletController"
-    | "ExportController";
-  quota_code: string | null;
+  passwordHash: string;
+  phoneNumber: string;
+  streetAddress: string;
+  suburb: string | null;
+  townCity: string;
+  postcode: string;
+  country: string;
+  avatarUrl: string | null;
+  backgroundUrl: string | null;
+  agreeTerms: boolean;
+  role: UserRole;
 }
 
 export const lucia = new Lucia(adapter, {
@@ -45,19 +37,21 @@ export const lucia = new Lucia(adapter, {
   },
   getUserAttributes: (attributes) => {
     return {
-      userId: attributes.user_id,
+      id: attributes.id,
       username: attributes.username,
+      firstName: attributes.firstName,
+      lastName: attributes.lastName,
+      displayName: attributes.displayName,
       email: attributes.email,
-      firstName: attributes.first_name,
-      lastName: attributes.last_name,
-      rsaId: attributes.rsa_id,
-      cellNumber: attributes.cell_number,
-      physicalAddress: attributes.physical_address,
-      profilePictureUrl: attributes.profile_picture_url,
-      isVerified: attributes.is_verified,
-      isActive: attributes.is_active,
+      phoneNumber: attributes.phoneNumber,
+      streetAddress: attributes.streetAddress,
+      suburb: attributes.suburb,
+      townCity: attributes.townCity,
+      postcode: attributes.postcode,
+      country: attributes.country,
+      avatarUrl: attributes.avatarUrl,
+      backgroundUrl: attributes.backgroundUrl,
       role: attributes.role,
-      quotaCode: attributes.quota_code,
     };
   },
 });

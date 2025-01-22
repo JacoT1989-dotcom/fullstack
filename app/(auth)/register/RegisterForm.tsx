@@ -14,21 +14,10 @@ import {
   FormMessage,
   FormDescription,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  registerSchema,
-  userRoles,
-  type RegisterFormValues,
-} from "./validation";
+import { registerSchema, type RegisterFormValues } from "./validation";
 import { signUp } from "./actions";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
@@ -42,22 +31,28 @@ const RegisterForm = () => {
     defaultValues: {
       username: "",
       email: "",
+      firstName: "",
+      lastName: "",
+      displayName: "",
+      streetAddress: "",
+      townCity: "",
+      postcode: "",
+      country: "",
       password: "",
       confirmPassword: "",
-      first_name: "",
-      last_name: "",
-      rsa_id: "",
-      cell_number: "",
-      physical_address: "",
-      roleapplication: "User",
+      role: "USER",
       agreeTerms: false,
+      avatarUrl: null,
+      backgroundUrl: null,
     },
   });
 
   const onSubmit = async (data: RegisterFormValues) => {
+    console.log("Form submitted with data:", data);
     try {
       setIsPending(true);
       const result = await signUp(data);
+      console.log("Registration result:", result);
 
       if (result?.error) {
         toast.error(result.error);
@@ -69,8 +64,8 @@ const RegisterForm = () => {
         return;
       }
 
-      toast.success("Registration successful! Please wait for approval.");
-      router.push("/register-pending-message");
+      toast.success("Registration successful!");
+      router.push("/register-success");
     } catch (error) {
       console.error("Registration error:", error);
       toast.error("Something went wrong. Please try again.");
@@ -151,7 +146,26 @@ const RegisterForm = () => {
 
               <FormField
                 control={form.control}
-                name="first_name"
+                name="displayName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Display Name*</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="John Doe"
+                        {...field}
+                        disabled={isPending}
+                        className="bg-background"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="firstName"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>First Name*</FormLabel>
@@ -170,7 +184,7 @@ const RegisterForm = () => {
 
               <FormField
                 control={form.control}
-                name="last_name"
+                name="lastName"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Last Name*</FormLabel>
@@ -189,20 +203,18 @@ const RegisterForm = () => {
 
               <FormField
                 control={form.control}
-                name="rsa_id"
+                name="streetAddress"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>RSA ID Number</FormLabel>
+                    <FormLabel>Street Address*</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Enter your RSA ID"
+                        placeholder="123 Main St"
                         {...field}
-                        maxLength={13}
                         disabled={isPending}
                         className="bg-background"
                       />
                     </FormControl>
-                    <FormDescription>13 digits maximum</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -210,13 +222,51 @@ const RegisterForm = () => {
 
               <FormField
                 control={form.control}
-                name="cell_number"
+                name="townCity"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Cell Number</FormLabel>
+                    <FormLabel>Town/City*</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="+27"
+                        placeholder="New York"
+                        {...field}
+                        disabled={isPending}
+                        className="bg-background"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="postcode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Postcode*</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="12345"
+                        {...field}
+                        disabled={isPending}
+                        className="bg-background"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="country"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Country*</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="United States"
                         {...field}
                         disabled={isPending}
                         className="bg-background"
@@ -274,57 +324,6 @@ const RegisterForm = () => {
 
             <FormField
               control={form.control}
-              name="physical_address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Physical Address</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter your physical address"
-                      {...field}
-                      disabled={isPending}
-                      className="bg-background"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="roleapplication"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Role Application*</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    disabled={isPending}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="bg-background">
-                        <SelectValue placeholder="Select a role" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {userRoles.map((role) => (
-                        <SelectItem key={role} value={role}>
-                          {role.replace(/([A-Z])/g, " $1").trim()}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    Select the role you wish to apply for
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
               name="agreeTerms"
               render={({ field }) => (
                 <FormItem className="flex flex-row items-start space-x-3 space-y-0">
@@ -377,6 +376,20 @@ const RegisterForm = () => {
             </div>
           </form>
         </Form>
+
+        {/* Display form errors if any */}
+        {Object.keys(form.formState.errors).length > 0 && (
+          <div className="mt-4 p-4 bg-red-50 text-red-500 rounded">
+            <h3 className="font-semibold">Form Errors:</h3>
+            <ul>
+              {Object.entries(form.formState.errors).map(([field, error]) => (
+                <li key={field}>
+                  {field}: {error.message}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );

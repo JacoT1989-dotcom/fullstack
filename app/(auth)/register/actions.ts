@@ -5,7 +5,7 @@ import { hash } from "@node-rs/argon2";
 import { isRedirectError } from "next/dist/client/components/redirect";
 import { redirect } from "next/navigation";
 import { RegisterFormValues, registerSchema } from "./validation";
-import { Prisma } from "@prisma/client";
+import { Prisma, UserRole } from "@prisma/client";
 
 export async function signUp(
   formData: RegisterFormValues,
@@ -13,7 +13,7 @@ export async function signUp(
   try {
     const validatedData = registerSchema.parse(formData);
 
-    const existingUsername = await prisma.users.findFirst({
+    const existingUsername = await prisma.user.findFirst({
       where: {
         username: {
           equals: validatedData.username,
@@ -28,7 +28,7 @@ export async function signUp(
       };
     }
 
-    const existingEmail = await prisma.users.findFirst({
+    const existingEmail = await prisma.user.findFirst({
       where: {
         email: {
           equals: validatedData.email,
@@ -50,26 +50,26 @@ export async function signUp(
       parallelism: 1,
     });
 
-    await prisma.users.create({
+    await prisma.user.create({
       data: {
         username: validatedData.username,
         email: validatedData.email,
-        password_hash: passwordHash,
-        first_name: validatedData.first_name,
-        last_name: validatedData.last_name,
-        rsa_id: validatedData.rsa_id,
-        cell_number: validatedData.cell_number,
-        physical_address: validatedData.physical_address,
-        is_verified: false,
-        is_active: true,
-        created_at: new Date(),
-        updated_at: new Date(),
-        role: "User",
-        roleapplication: validatedData.roleapplication,
+        firstName: validatedData.firstName,
+        lastName: validatedData.lastName,
+        displayName: validatedData.displayName,
+        passwordHash: passwordHash,
+        streetAddress: validatedData.streetAddress,
+        townCity: validatedData.townCity,
+        postcode: validatedData.postcode,
+        country: validatedData.country,
+        avatarUrl: validatedData.avatarUrl,
+        backgroundUrl: validatedData.backgroundUrl,
+        agreeTerms: validatedData.agreeTerms,
+        role: validatedData.role as UserRole,
       },
     });
 
-    redirect("/register-pending-message");
+    redirect("/login");
   } catch (error) {
     if (isRedirectError(error)) throw error;
 
@@ -78,8 +78,7 @@ export async function signUp(
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === "P2002") {
         return {
-          error:
-            "Database error: Please try again or contact support if the problem persists.",
+          error: "Username or email already exists.",
         };
       }
     }

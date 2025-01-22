@@ -1,40 +1,7 @@
 import * as z from "zod";
-
-export const UserRole = {
-  User: "User",
-  SystemAdministrator: "SystemAdministrator",
-  SecurityAdministrator: "SecurityAdministrator",
-  PermitAdministrator: "PermitAdministrator",
-  PermitHolder: "PermitHolder",
-  RightsHolder: "RightsHolder",
-  Skipper: "Skipper",
-  Inspector: "Inspector",
-  Monitor: "Monitor",
-  Driver: "Driver",
-  FactoryStockController: "FactoryStockController",
-  LocalOutletController: "LocalOutletController",
-  ExportController: "ExportController",
-} as const;
-
-export type UserRoleType = (typeof UserRole)[keyof typeof UserRole];
+import { UserRole } from "@prisma/client";
 
 export const userRoles = Object.values(UserRole);
-
-export const UserRoleEnum = z.enum([
-  "User",
-  "SystemAdministrator",
-  "SecurityAdministrator",
-  "PermitAdministrator",
-  "PermitHolder",
-  "RightsHolder",
-  "Skipper",
-  "Inspector",
-  "Monitor",
-  "Driver",
-  "FactoryStockController",
-  "LocalOutletController",
-  "ExportController",
-] as const);
 
 export const registerSchema = z
   .object({
@@ -46,6 +13,34 @@ export const registerSchema = z
       .string()
       .email("Please enter a valid email address")
       .max(100, "Email cannot exceed 100 characters"),
+    firstName: z
+      .string()
+      .min(1, "First name is required")
+      .max(100, "First name cannot exceed 100 characters"),
+    lastName: z
+      .string()
+      .min(1, "Last name is required")
+      .max(100, "Last name cannot exceed 100 characters"),
+    displayName: z
+      .string()
+      .min(1, "Display name is required")
+      .max(100, "Display name cannot exceed 100 characters"),
+    streetAddress: z
+      .string()
+      .min(1, "Street address is required")
+      .max(200, "Street address cannot exceed 200 characters"),
+    townCity: z
+      .string()
+      .min(1, "Town/City is required")
+      .max(100, "Town/City cannot exceed 100 characters"),
+    postcode: z
+      .string()
+      .min(1, "Postcode is required")
+      .max(20, "Postcode cannot exceed 20 characters"),
+    country: z
+      .string()
+      .min(1, "Country is required")
+      .max(100, "Country cannot exceed 100 characters"),
     password: z
       .string()
       .min(8, "Password must be at least 8 characters")
@@ -58,29 +53,12 @@ export const registerSchema = z
         "Password must contain at least one special character",
       ),
     confirmPassword: z.string(),
-    first_name: z
-      .string()
-      .min(1, "First name is required")
-      .max(100, "First name cannot exceed 100 characters"),
-    last_name: z
-      .string()
-      .min(1, "Last name is required")
-      .max(100, "Last name cannot exceed 100 characters"),
-    rsa_id: z.string().max(13, "RSA ID cannot exceed 13 characters").optional(),
-    cell_number: z
-      .string()
-      .max(20, "Cell number cannot exceed 20 characters")
-      .optional(),
-    physical_address: z.string().optional(),
-    roleapplication: z
-      .string()
-      .default("User")
-      .refine((val) => Object.values(UserRole).includes(val as UserRoleType), {
-        message: "Invalid role application type",
-      }),
     agreeTerms: z.boolean().refine((val) => val === true, {
       message: "You must agree to the terms and conditions",
     }),
+    role: z.nativeEnum(UserRole).default(UserRole.USER),
+    avatarUrl: z.string().optional().nullable(),
+    backgroundUrl: z.string().optional().nullable(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
