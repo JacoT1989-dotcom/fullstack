@@ -1,0 +1,346 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model audit_logs {
+  log_id      Int       @id @default(autoincrement())
+  user_id     Int?
+  action_type String    @db.VarChar(50)
+  table_name  String    @db.VarChar(50)
+  record_id   Int
+  changes     Json?
+  created_at  DateTime? @default(now()) @db.Timestamptz(6)
+  users       users?    @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model catch_areas {
+  area_id     Int                     @id @default(autoincrement())
+  area_code   String                  @unique @db.VarChar(20)
+  area_name   String                  @db.VarChar(100)
+  coordinates Unsupported("polygon")?
+  description String?
+  created_at  DateTime?               @default(now()) @db.Timestamptz(6)
+}
+
+model catch_records {
+  catch_id                 Int                   @id @default(autoincrement())
+  notification_id          Int?
+  monitor_id               Int?
+  quota_id                 Int?
+  rightsholder_id          Int?
+  gross_registered_tonnage Decimal               @db.Decimal(10, 2)
+  location_coordinates     Unsupported("point")?
+  traps_set                Int?
+  traps_pulled             Int?
+  bins_animals             Int?
+  total_catch_mass         Decimal?              @db.Decimal(10, 2)
+  number_of_catches        Int?
+  departure_date           DateTime              @db.Timestamptz(6)
+  landing_date             DateTime              @db.Timestamptz(6)
+  notes                    String?
+  upload_image_url         String?
+  created_at               DateTime?             @default(now()) @db.Timestamptz(6)
+  monitors                 monitors?             @relation(fields: [monitor_id], references: [monitor_id], onDelete: NoAction, onUpdate: NoAction)
+  trip_notifications       trip_notifications?   @relation(fields: [notification_id], references: [notification_id], onDelete: NoAction, onUpdate: NoAction)
+  quotas                   quotas?               @relation(fields: [quota_id], references: [quota_id], onDelete: NoAction, onUpdate: NoAction)
+  rightsholders            rightsholders?        @relation(fields: [rightsholder_id], references: [rightsholder_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model factories {
+  factory_id      Int            @id @default(autoincrement())
+  rightsholder_id Int?
+  factory_owner   String?
+  factory_name    String         @db.VarChar(50)
+  factory_address String?
+  created_at      DateTime?      @default(now()) @db.Timestamptz(6)
+  rightsholders   rightsholders? @relation(fields: [rightsholder_id], references: [rightsholder_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model landing_sites {
+  site_id              Int                   @id @default(autoincrement())
+  site_name            String                @db.VarChar(100)
+  location_coordinates Unsupported("point")?
+  address              String?
+  contact_person       String?               @db.VarChar(100)
+  contact_number       String?               @db.VarChar(20)
+  is_active            Boolean?              @default(true)
+  created_at           DateTime?             @default(now()) @db.Timestamptz(6)
+}
+
+model log_data {
+  id                       Int             @id @default(autoincrement())
+  scale_id                 String?         @db.VarChar(255)
+  vessel_name              String?         @db.VarChar(255)
+  vessel_length            String?         @db.VarChar(255)
+  fishing_sector           String?         @db.VarChar(255)
+  gross_registered_tonnage Int?
+  catch_area               String?         @db.VarChar(255)
+  subarea                  String?         @db.VarChar(255)
+  traps_set                Int?
+  traps_pulled             Int?
+  bins_animals             Int?
+  total_catch_mass         Int?
+  number_of_catches        Int?
+  departure_date           DateTime?       @db.Timestamp(6)
+  landing_date             DateTime?       @db.Timestamp(6)
+  product_type             String?         @db.VarChar(255)
+  rights_holder_id         Int?
+  monitor_name             String?         @db.VarChar(40)
+  permit_number            String?         @db.VarChar(20)
+  status                   String?         @db.VarChar(20)
+  rights_holders           rights_holders? @relation(fields: [rights_holder_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model monitors {
+  monitor_id     Int             @id @default(autoincrement())
+  user_id        Int?
+  monitor_code   String?         @unique @db.VarChar(50)
+  statistic_book String?         @db.VarChar(50)
+  receipt_number String?         @unique @db.VarChar(50)
+  receipt_amount String?         @db.VarChar(50)
+  created_at     DateTime?       @default(now()) @db.Timestamptz(6)
+  catch_records  catch_records[]
+  users          users?          @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model permits {
+  id                 Int             @id @default(autoincrement())
+  date_issued        DateTime?       @db.Timestamp(6)
+  date_expiry        DateTime?       @db.Timestamp(6)
+  validity_period    DateTime?       @db.Timestamp(6)
+  permit_name        String?         @db.VarChar(255)
+  permit_number      String?         @db.VarChar(255)
+  special_conditions String?
+  zone_area          String?         @db.VarChar(255)
+  marine_resource    String?         @db.VarChar(255)
+  quota_codes        String?         @db.VarChar(255)
+  quota_used         Int?
+  rights_holder_id   Int?
+  quota_allocated    Int?
+  quota_balance      Decimal?        @default(dbgenerated("(quota_allocated - quota_used)")) @db.Decimal
+  rights_holders     rights_holders? @relation(fields: [rights_holder_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model quotas {
+  quota_id               Int                  @id @default(autoincrement())
+  rightsholder_id        Int?
+  quota_code             String               @unique @db.VarChar(50)
+  quota_allocation       Decimal              @db.Decimal(10, 2)
+  overcatch_2023_2024    Decimal?             @db.Decimal(10, 2)
+  final_quota_allocation Decimal              @db.Decimal(10, 2)
+  quota_used             Decimal?             @db.Decimal(10, 2)
+  start_date             DateTime?            @db.Timestamptz(6)
+  end_date               DateTime?            @db.Timestamptz(6)
+  status                 quota_status
+  season                 String               @db.VarChar(20)
+  marine_resources       String               @db.VarChar(100)
+  product_type           String               @db.VarChar(100)
+  sector_name            String               @db.VarChar(100)
+  catch_area3_4          Decimal?             @db.Decimal(10, 2)
+  catch_area7            Decimal?             @db.Decimal(10, 2)
+  catch_area8            Decimal?             @db.Decimal(10, 2)
+  catch_area11           Decimal?             @db.Decimal(10, 2)
+  sub_area               String?              @db.VarChar(20)
+  created_at             DateTime?            @default(now()) @db.Timestamptz(6)
+  quota_balance          Decimal?             @default(dbgenerated("(final_quota_allocation - quota_used)")) @db.Decimal
+  catch_records          catch_records[]
+  rightsholders          rightsholders?       @relation(fields: [rightsholder_id], references: [rightsholder_id], onDelete: NoAction, onUpdate: NoAction)
+  skippers               skippers[]
+  trip_notifications     trip_notifications[]
+
+  @@index([status], map: "idx_quota_status")
+}
+
+model rights_holders {
+  id                   Int        @id @default(autoincrement())
+  first_name           String?    @db.VarChar(255)
+  surname              String?    @db.VarChar(255)
+  id_number            String?    @db.VarChar(255)
+  company_name         String?    @db.VarChar(255)
+  physical_address     String?
+  rh_cell_phone        String?    @db.VarChar(255)
+  email                String?    @db.VarChar(255)
+  valid_permits_issued Int?
+  rh_number            String?    @db.VarChar(255)
+  permit_number        Int?
+  factory_name         String?    @db.VarChar(255)
+  factory_address      String?
+  factory_owner        String?    @db.VarChar(255)
+  export_code          String?    @db.VarChar(255)
+  catch_area           String?    @db.VarChar(255)
+  statistic_book       String?    @db.VarChar(255)
+  marine_resources     String?
+  quota_code           String?    @db.VarChar(255)
+  quota_allocated      Int?
+  receipt_number       String?    @db.VarChar(255)
+  receipt_amount       Int?
+  quota_used           Int?
+  quota_balance        Decimal?   @default(dbgenerated("(quota_allocated - quota_used)")) @db.Decimal
+  vessel_name          String?    @db.VarChar(20)
+  vessel_length        String?    @db.VarChar(20)
+  fishing_sector       String?    @db.VarChar(40)
+  product_type         String?    @db.VarChar(20)
+  subarea              String?    @db.VarChar(40)
+  date_expiry          DateTime?  @db.Timestamp(6)
+  log_data             log_data[]
+  permits              permits[]
+}
+
+model rightsholders {
+  rightsholder_id     Int             @id @default(autoincrement())
+  user_id             Int?
+  company_name        String          @db.VarChar(100)
+  registration_number String?         @unique @db.VarChar(50)
+  permit_number       String?         @unique @db.VarChar(50)
+  contact_address     String?
+  created_at          DateTime?       @default(now()) @db.Timestamptz(6)
+  rightsholder_nr     String?         @unique @db.VarChar(40)
+  catch_records       catch_records[]
+  factories           factories[]
+  quotas              quotas[]
+  users               users?          @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+  skippers            skippers[]
+  vessels             vessels[]
+}
+
+model skipper_notifications {
+  id                  Int       @id @default(autoincrement())
+  cellphone_nr        String?   @db.VarChar(20)
+  permit_number       String?   @db.VarChar(50)
+  authorised_rep_name String?   @db.VarChar(20)
+  status              String?   @db.VarChar(20)
+  sessionid           String?
+  date_sent           DateTime? @db.Timestamptz(6)
+  email               String?   @db.VarChar(40)
+}
+
+model skippers {
+  skipper_id         Int                  @id @default(autoincrement())
+  user_id            Int?
+  quota_id           Int?
+  rightsholder_id    Int?
+  skipper_code       String?              @unique @db.VarChar(50)
+  created_at         DateTime?            @default(now()) @db.Timestamptz(6)
+  quotas             quotas?              @relation(fields: [quota_id], references: [quota_id], onDelete: NoAction, onUpdate: NoAction)
+  rightsholders      rightsholders?       @relation(fields: [rightsholder_id], references: [rightsholder_id], onDelete: NoAction, onUpdate: NoAction)
+  users              users?               @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+  trip_notifications trip_notifications[]
+}
+
+model species {
+  species_id      Int       @id @default(autoincrement())
+  common_name     String    @db.VarChar(100)
+  scientific_name String?   @db.VarChar(100)
+  species_code    String    @unique @db.VarChar(50)
+  minimum_size    Decimal?  @db.Decimal(10, 2)
+  maximum_size    Decimal?  @db.Decimal(10, 2)
+  created_at      DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+model trip_notifications {
+  notification_id   Int                 @id @default(autoincrement())
+  skipper_id        Int?
+  quota_id          Int?
+  vessel_id         Int?
+  planned_departure DateTime?           @db.Timestamptz(6)
+  expected_return   DateTime?           @db.Timestamptz(6)
+  status            notification_status
+  cellphone_nr      String?             @db.VarChar(100)
+  sessionid         String?             @db.VarChar(100)
+  email             String?             @db.VarChar(100)
+  created_at        DateTime?           @default(now()) @db.Timestamptz(6)
+  quota_code        String?
+  catch_records     catch_records[]
+  quotas            quotas?             @relation(fields: [quota_id], references: [quota_id], onDelete: NoAction, onUpdate: NoAction)
+  skippers          skippers?           @relation(fields: [skipper_id], references: [skipper_id], onDelete: NoAction, onUpdate: NoAction)
+  vessels           vessels?            @relation(fields: [vessel_id], references: [vessel_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([status], map: "idx_notifications_status")
+}
+
+model users {
+  user_id             Int             @id @default(autoincrement())
+  username            String          @unique @db.VarChar(50)
+  password_hash       String?         @db.VarChar(255)
+  email               String          @db.VarChar(100)
+  first_name          String          @db.VarChar(100)
+  last_name           String          @db.VarChar(100)
+  rsa_id              String?         @db.VarChar(13)
+  cell_number         String?         @db.VarChar(20)
+  physical_address    String?
+  profile_picture_url String?
+  is_verified         Boolean?
+  is_active           Boolean?
+  last_login          DateTime?       @db.Timestamptz(6)
+  created_at          DateTime?       @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime?       @db.Timestamptz(6)
+  two_factor_enabled  Boolean?
+  two_factor_secret   String?
+  role                user_role
+  quota_code          String?         @db.VarChar
+  roleapplication     String          @default("User")
+  audit_logs          audit_logs[]
+  monitors            monitors[]
+  rightsholders       rightsholders[]
+  skippers            skippers[]
+  Session             Session[]
+
+  @@index([role], map: "idx_users_role")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  user_id   Int // Changed to Int to match your users table
+  expiresAt DateTime @db.Timestamptz(6)
+  users     users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model vessels {
+  vessel_id           Int                  @id @default(autoincrement())
+  rightsholder_id     Int?
+  vessel_name         String               @db.VarChar(100)
+  vessel_length       String?              @db.VarChar(100)
+  registration_number String               @unique @db.VarChar(50)
+  vessel_type         String               @db.VarChar(50)
+  capacity            Decimal?             @db.Decimal(10, 2)
+  scale_id            String?              @db.VarChar(100)
+  created_at          DateTime?            @default(now()) @db.Timestamptz(6)
+  trip_notifications  trip_notifications[]
+  rightsholders       rightsholders?       @relation(fields: [rightsholder_id], references: [rightsholder_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+enum notification_status {
+  PENDING
+  APPROVED
+  DENIED
+}
+
+enum quota_status {
+  VALID
+  INVALID
+  EXPIRED
+}
+
+enum user_role {
+  User
+  SystemAdministrator
+  SecurityAdministrator
+  PermitAdministrator
+  PermitHolder
+  RightsHolder
+  Skipper
+  Inspector
+  Monitor
+  Driver
+  FactoryStockController
+  LocalOutletController
+  ExportController
+}
