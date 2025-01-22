@@ -1,9 +1,9 @@
 import { validateRequest } from "@/auth";
-import { redirect } from "next/navigation";
-import Navbar from "./_components/Navbar";
-import { Toaster } from "sonner";
-import SidebarNavigation from "./_components/SlideInSideBar";
 import SessionProvider from "./SessionProvider";
+import Navbar from "./_components/Navbar";
+import SidebarNavigation from "./_components/SlideInSideBar";
+import { redirect } from "next/navigation";
+import { Toaster } from "sonner";
 
 export const dynamic = "force-dynamic";
 
