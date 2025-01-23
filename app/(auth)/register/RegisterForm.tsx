@@ -23,7 +23,7 @@ import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 
 const RegisterForm = () => {
-  const router = useRouter();
+  const router = useRouter(); // this state that we init is to navigate the user somewhere else
   const [isPending, setIsPending] = React.useState(false);
 
   const form = useForm<RegisterFormValues>({
