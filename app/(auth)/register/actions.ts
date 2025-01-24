@@ -43,6 +43,8 @@ export async function signUp(
       };
     }
 
+    ////////////THIS IS THE PART OF THE FUNCTION WHERE ALL PARAMS HAVE PASSED THE CHECKS/////////////
+
     const passwordHash = await hash(validatedData.password, {
       memoryCost: 19456,
       timeCost: 2,

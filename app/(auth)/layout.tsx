@@ -14,7 +14,7 @@ enum UserRole {
 
 // Define role-based routing
 const roleRoutes: Record<UserRole, string> = {
-  [UserRole.USER]: "/dashboard",
+  [UserRole.USER]: "/register-success",
   [UserRole.CUSTOMER]: "/customer",
   [UserRole.PROCUSTOMER]: "/pro",
   [UserRole.EDITOR]: "/editor",

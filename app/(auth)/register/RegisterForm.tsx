@@ -12,7 +12,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,12 +47,9 @@ const RegisterForm = () => {
   });
 
   const onSubmit = async (data: RegisterFormValues) => {
-    console.log("Form submitted with data:", data);
     try {
       setIsPending(true);
       const result = await signUp(data);
-      console.log("Registration result:", result);
-
       if (result?.error) {
         toast.error(result.error);
         if (result.error.includes("Username")) {
@@ -115,9 +111,6 @@ const RegisterForm = () => {
                         className="bg-background"
                       />
                     </FormControl>
-                    <FormDescription>
-                      Must be at least 3 characters long
-                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -292,10 +285,7 @@ const RegisterForm = () => {
                         className="bg-background"
                       />
                     </FormControl>
-                    <FormDescription>
-                      Must include uppercase, lowercase, number, and special
-                      character
-                    </FormDescription>
+
                     <FormMessage />
                   </FormItem>
                 )}
@@ -376,20 +366,6 @@ const RegisterForm = () => {
             </div>
           </form>
         </Form>
-
-        {/* Display form errors if any */}
-        {Object.keys(form.formState.errors).length > 0 && (
-          <div className="mt-4 p-4 bg-red-50 text-red-500 rounded">
-            <h3 className="font-semibold">Form Errors:</h3>
-            <ul>
-              {Object.entries(form.formState.errors).map(([field, error]) => (
-                <li key={field}>
-                  {field}: {error.message}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
       </div>
     </div>
   );

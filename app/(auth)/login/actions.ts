@@ -9,7 +9,7 @@ import { LoginFormValues } from "./validation";
 import { UserRole } from "@prisma/client";
 
 const roleRoutes: Record<UserRole, string> = {
-  [UserRole.USER]: "/",
+  [UserRole.USER]: "/register-success",
   [UserRole.CUSTOMER]: "/customer",
   [UserRole.PROCUSTOMER]: "/pro",
   [UserRole.EDITOR]: "/editor",
