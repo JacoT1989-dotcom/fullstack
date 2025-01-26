@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import SessionProvider from "./SessionProvider";
 import { Toaster } from "react-hot-toast";
 import { UserRole } from "@prisma/client";
+import Navbar from "./_components/Navbar";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,7 @@ export default async function CustomerLayout({
     <SessionProvider value={session}>
       <Toaster />
       <div className="flex min-h-screen flex-col">
+        <Navbar /> {/* Add the Navbar here */}
         <div className="bg-slate-400"></div>
         <div className="flex w-full grow">
           <main className="flex-grow">{children}</main>
