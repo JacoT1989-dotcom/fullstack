@@ -19,8 +19,8 @@ const Navbar = () => {
           <div className="flex items-center justify-between text-xs mx-auto w-full py-6 px-8">
             <Link href="/customer" className="w-[170px] h-[10px] mb-5">
               {/* <Image
-                src="/captivity-logo-white.png"
-                alt="captivityLogo"
+                src=""
+                alt=""
                 width={331}
                 height={54}
                 className="h-auto border border-white hover:opacity-80 hover:border-2"
