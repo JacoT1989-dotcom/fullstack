@@ -65,6 +65,7 @@ export default function UserButton({ className }: UserButtonProps) {
             My Account
           </DropdownMenuItem>
         </Link>
+        <DropdownMenuSeparator />
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
             <Monitor className="mr-2 size-4" />
