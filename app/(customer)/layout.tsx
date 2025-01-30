@@ -22,11 +22,13 @@ export default async function CustomerLayout({
     <SessionProvider value={session}>
       <Toaster />
       <div className="flex min-h-screen flex-col">
-        <Navbar /> {/* Add the Navbar here */}
+        <Navbar />
+        {/* Add the Navbar here */}
         <div className="bg-slate-400"></div>
         <div className="flex w-full grow">
           <main className="flex-grow">{children}</main>
         </div>
+        FOOTER
       </div>
     </SessionProvider>
   );

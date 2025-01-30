@@ -1,16 +1,9 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { GoHomeFill } from "react-icons/go";
-import { TbCategoryFilled } from "react-icons/tb";
-import { FaHeart } from "react-icons/fa";
-import { MdAccountCircle } from "react-icons/md";
-import { useSession } from "../SessionProvider";
 import UserButton from "./UserButton";
 
 const Navbar = () => {
-  const session = useSession();
-
   return (
     <>
       {/* Fixed top navbar */}
@@ -41,40 +34,6 @@ const Navbar = () => {
 
       {/* Spacer to prevent content from going under fixed navbar */}
       <div className="h-[120px] md:h-[88px]"></div>
-
-      {/* Mobile bottom Nav */}
-      <div className="md:hidden fixed inset-x-0 bottom-0 bg-background shadow-xl shadow-gray-400 border-t-2 border-t-gray-400 border-2 ml-5 mr-5 mb-2 z-50 rounded-xl">
-        <div className="flex justify-around text-gray-500 m-auto">
-          <Link
-            href="/customer"
-            className="flex flex-col items-center py-2 hover:text-red-500"
-          >
-            <GoHomeFill />
-            <div className="text-xs mt-2">Home</div>
-          </Link>
-          <Link
-            href="/customer/shopping/product_categories/summer"
-            className="flex flex-col items-center py-2 hover:text-red-500"
-          >
-            <TbCategoryFilled />
-            <div className="text-xs mt-2">Categories</div>
-          </Link>
-          <Link
-            href="/customer/favourites"
-            className="flex text-gray-600 flex-col items-center py-2 hover:text-red-500"
-          >
-            <FaHeart />
-            <div className="text-xs mt-2">Favorites</div>
-          </Link>
-          <Link
-            href="/customer/account-info"
-            className="flex flex-col items-center py-2 hover:text-red-500"
-          >
-            <MdAccountCircle />
-            <div className="text-xs mt-2">Account</div>
-          </Link>
-        </div>
-      </div>
     </>
   );
 };
