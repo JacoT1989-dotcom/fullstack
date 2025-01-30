@@ -4,6 +4,7 @@ import { Toaster } from "react-hot-toast";
 import { UserRole } from "@prisma/client";
 import SessionProvider from "./SessionProvider";
 import Navbar from "./_components/Navbar";
+import Sidebar from "./_components/Sidebar";
 
 export const dynamic = "force-dynamic";
 
@@ -20,15 +21,13 @@ export default async function CustomerLayout({
 
   return (
     <SessionProvider value={session}>
-      <Toaster />
-      <div className="flex min-h-screen flex-col">
+      <div className="flex h-screen flex-col">
         <Navbar />
-        {/* Add the Navbar here */}
-        <div className="bg-slate-400"></div>
-        <div className="flex w-full grow">
-          <main className="flex-grow">{children}</main>
+        <div className="flex flex-1 overflow-hidden">
+          <Sidebar />
+          <main className="flex-1 overflow-y-auto p-8">{children}</main>
         </div>
-        FOOTER
+        <Toaster />
       </div>
     </SessionProvider>
   );
