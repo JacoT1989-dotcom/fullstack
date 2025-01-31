@@ -22,8 +22,8 @@ export const navigation: NavItem[] = [
     label: "Products",
     icon: ShoppingCart,
     links: [
-      { name: "Create", href: "/products/create" },
-      { name: "Update", href: "/products/update" },
+      { name: "Create", href: "/admin/products/create" },
+      { name: "Update", href: "/admin/products/update" },
       { name: "Collections", href: "/products/collections" },
     ],
   },
