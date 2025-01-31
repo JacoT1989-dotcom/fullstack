@@ -22,13 +22,32 @@ const Sidebar = () => {
 
   return (
     <div className="relative flex h-screen">
+      {/* Mobile Overlay */}
+      {!isCollapsed && (
+        <div
+          className="fixed inset-0 z-20 bg-background/80 lg:hidden"
+          onClick={() => setIsCollapsed(true)}
+        />
+      )}
+
       {/* Sidebar */}
       <div
         className={cn(
-          "relative flex h-full flex-col bg-card border-r border-border transition-all duration-300",
+          "relative z-30 flex h-full flex-col bg-card border-r border-border transition-all duration-300",
           isCollapsed ? "w-16" : "w-64",
         )}
       >
+        {/* Logo/Name Section */}
+        <div className="flex items-center px-3 h-16 border-b border-border">
+          {isCollapsed ? (
+            <span className="mx-auto text-xl font-bold text-primary">A</span>
+          ) : (
+            <Link href="/dashboard" className="flex items-center space-x-2">
+              <span className="text-xl font-bold text-primary">Admin</span>
+            </Link>
+          )}
+        </div>
+
         {/* Toggle Button */}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
@@ -95,14 +114,6 @@ const Sidebar = () => {
           </div>
         </div>
       </div>
-
-      {/* Mobile Overlay */}
-      {!isCollapsed && (
-        <div
-          className="fixed inset-0 z-30 bg-background/80 backdrop-blur-sm lg:hidden"
-          onClick={() => setIsCollapsed(true)}
-        />
-      )}
     </div>
   );
 };
