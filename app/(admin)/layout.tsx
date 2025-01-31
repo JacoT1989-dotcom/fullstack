@@ -15,7 +15,11 @@ export default async function CustomerLayout({
 }) {
   const session = await validateRequest();
 
-  if (!session.user || session.user.role !== UserRole.ADMIN) {
+  if (
+    !session.user ||
+    (session.user.role !== UserRole.ADMIN &&
+      session.user.role !== UserRole.SUPERADMIN)
+  ) {
     redirect("/login");
   }
 
