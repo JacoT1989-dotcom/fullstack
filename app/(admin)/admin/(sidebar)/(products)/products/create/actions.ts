@@ -4,7 +4,6 @@ import { validateRequest } from "@/auth";
 import { redirect } from "next/navigation";
 import { put } from "@vercel/blob";
 import prisma from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
 import {
   ALLOWED_IMAGE_TYPES,
   MAX_IMAGE_SIZE,
