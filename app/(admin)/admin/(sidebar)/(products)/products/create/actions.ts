@@ -73,9 +73,6 @@ export async function createProduct(
       },
     });
 
-    // Revalidate the products page
-    revalidatePath("/products");
-
     return {
       success: true,
       product: {
