@@ -21,7 +21,7 @@ export async function getHeadwearProducts(): Promise<ProductActionResult> {
         sellingPrice: true,
       },
       orderBy: {
-        createdAt: "desc",
+        createdAt: "asc",
       },
     });
 
