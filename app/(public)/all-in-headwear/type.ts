@@ -1,7 +1,7 @@
 // types.ts
 
 // Base Product Type (for internal use)
-export interface BaseProduct {
+interface BaseProduct {
   id: string;
   productName: string;
   category: string[];
@@ -11,12 +11,12 @@ export interface BaseProduct {
 }
 
 // Full Product Type (includes all fields)
-export interface Product extends BaseProduct {
+interface Product extends BaseProduct {
   isPublished: boolean;
 }
 
 // Public Product Type (for public-facing data)
-export type PublicProduct = BaseProduct;
+type PublicProduct = BaseProduct;
 
 // Action Result Types
 export interface ProductActionResult {
