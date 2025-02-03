@@ -25,13 +25,3 @@ export interface ProductActionResult {
   product?: Product;
   products?: PublicProduct[]; // Changed to PublicProduct for public endpoints
 }
-
-// Form Data Type
-export interface ProductFormData {
-  productName: string;
-  category: string[];
-  productImage: File;
-  description: string;
-  sellingPrice: number;
-  isPublished: boolean;
-}
