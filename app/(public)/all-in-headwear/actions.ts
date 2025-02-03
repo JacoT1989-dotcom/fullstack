@@ -8,7 +8,7 @@ export async function getHeadwearProducts(): Promise<ProductActionResult> {
     const products = await prisma.product.findMany({
       where: {
         category: {
-          has: "headwear",
+          hasSome: ["headwear", "Headwear", "HEADWEAR"], // Match any case variation
         },
         isPublished: true,
       },
@@ -27,7 +27,7 @@ export async function getHeadwearProducts(): Promise<ProductActionResult> {
 
     return {
       success: true,
-      products, // Now this matches the PublicProduct[] type
+      products,
     };
   } catch (error) {
     console.error("Error fetching headwear products:", error);
