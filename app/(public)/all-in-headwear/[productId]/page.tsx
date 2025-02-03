@@ -1,7 +1,32 @@
-import React from "react";
+// app/product/[productId]/page.tsx
 
-const ProductDetailsPage = () => {
-  return <div className="mt-20">this is the detailed product</div>;
+import { getProductById } from "./actions";
+import ProductDetails from "./ProductDetails";
+
+interface ProductDetailsPageProps {
+  params: {
+    productId: string;
+  };
+}
+
+const ProductDetailsPage = async ({ params }: ProductDetailsPageProps) => {
+  const result = await getProductById(params.productId);
+
+  if (!result.success || !result.products?.[0]) {
+    return (
+      <div className="mt-20 container mx-auto px-4 text-center">
+        <h1 className="text-2xl text-red-600">
+          {result.error || "Failed to load product"}
+        </h1>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-20">
+      <ProductDetails product={result.products[0]} />
+    </div>
+  );
 };
 
 export default ProductDetailsPage;
