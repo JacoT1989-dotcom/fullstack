@@ -23,6 +23,7 @@ import { ALLOWED_IMAGE_TYPES } from "./types";
 
 export function CreateProductForm() {
   const [loading, setLoading] = useState(false);
+  const [displayPrice, setDisplayPrice] = useState("0.00");
 
   const form = useForm<CreateProductInput>({
     resolver: zodResolver(createProductSchema),
@@ -111,11 +112,38 @@ export function CreateProductForm() {
                 <FormLabel>Price</FormLabel>
                 <FormControl>
                   <Input
-                    type="number"
-                    step="0.01"
+                    type="text"
                     placeholder="0.00"
-                    value={field.value}
-                    onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                    value={displayPrice}
+                    onChange={(e) => {
+                      // Allow only numbers and one decimal point
+                      const value = e.target.value.replace(/[^\d.]/g, "");
+                      const parts = value.split(".");
+                      if (parts.length > 2) return; // Prevent multiple decimal points
+
+                      setDisplayPrice(value);
+                      field.onChange(value ? parseFloat(value) : 0);
+                    }}
+                    onBlur={(e) => {
+                      const value = displayPrice.trim();
+                      let formattedValue;
+
+                      if (!value || value === "0") {
+                        formattedValue = "0.00";
+                      }
+                      // If already has decimals
+                      else if (value.includes(".")) {
+                        const [whole, decimal = ""] = value.split(".");
+                        formattedValue = `${whole}.${decimal.padEnd(2, "0")}`;
+                      }
+                      // Integer values
+                      else {
+                        formattedValue = `${value}.00`;
+                      }
+
+                      setDisplayPrice(formattedValue);
+                      field.onChange(parseFloat(formattedValue));
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
