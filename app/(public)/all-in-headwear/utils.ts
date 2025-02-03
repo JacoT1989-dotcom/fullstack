@@ -5,3 +5,4 @@ export const formatCurrency = (amount: number): string => {
     currency: "ZAR",
   }).format(amount);
 };
+

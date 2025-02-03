@@ -1,5 +1,4 @@
 // app/products/page.tsx
-
 import { getHeadwearProducts } from "./actions";
 import ProductGrid from "./ProductGrid";
 
