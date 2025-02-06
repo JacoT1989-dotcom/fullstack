@@ -1,33 +1,57 @@
+// Base types that match the Prisma schema
 export interface Slide {
-  id: number;
+  id: string;
   title: string;
   description: string;
   bgColor: string;
+  order: number;
+  userId: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-export const slides: Slide[] = [
-  {
-    id: 1,
-    title: "Welcome to Our Platform",
-    description: "Discover amazing features and possibilities",
-    bgColor: "bg-blue-500",
-  },
-  {
-    id: 2,
-    title: "Premium Quality",
-    description: "Experience the best in class service",
-    bgColor: "bg-purple-500",
-  },
-  {
-    id: 3,
-    title: "24/7 Support",
-    description: "We're here to help you anytime",
-    bgColor: "bg-green-500",
-  },
-  {
-    id: 4,
-    title: "Join Today",
-    description: "Start your journey with us",
-    bgColor: "bg-red-500",
-  },
-];
+// Type for creating a new slide
+export interface CreateSlideInput {
+  title: string;
+  description: string;
+  bgColor: string;
+  order: number;
+}
+
+// Type for updating a slide
+export interface UpdateSlideInput {
+  id: string;
+  title?: string;
+  description?: string;
+  bgColor?: string;
+  order?: number;
+}
+
+// Type for the UI component props
+export interface SlideComponentProps {
+  slide: Slide;
+  onEdit?: (slide: Slide) => void;
+  onDelete?: (id: string) => void;
+  isEditable?: boolean;
+}
+
+// Action types for state management
+export type SlideAction =
+  | { type: "ADD_SLIDE"; payload: CreateSlideInput }
+  | { type: "UPDATE_SLIDE"; payload: UpdateSlideInput }
+  | { type: "DELETE_SLIDE"; payload: string }
+  | { type: "REORDER_SLIDES"; payload: { id: string; newOrder: number }[] }
+  | { type: "SET_SLIDES"; payload: Slide[] };
+
+// Response types for API calls
+export interface SlideResponse {
+  success: boolean;
+  data?: Slide;
+  error?: string;
+}
+
+export interface SlidesResponse {
+  success: boolean;
+  data?: Slide[];
+  error?: string;
+}
