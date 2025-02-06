@@ -28,6 +28,7 @@ model User {
   role          UserRole  @default(USER)
   Session       Session[]
   Product       Product[]
+  Slide         Slide[]
 
   @@map("users")
 }
@@ -67,4 +68,19 @@ model Product {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("products")
+}
+
+model Slide {
+  id          String @id @default(uuid())
+  title       String
+  description String
+  bgColor     String
+  order       Int // Added to maintain slide order
+  userId      String
+  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("slides")
 }
