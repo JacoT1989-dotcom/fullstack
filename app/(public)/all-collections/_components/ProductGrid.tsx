@@ -3,7 +3,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { ProductCard } from "../Card";
+import { ProductCard } from "./Card";
 
 interface ProductCardProps {
   id: string;
