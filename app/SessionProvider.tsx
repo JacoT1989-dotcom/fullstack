@@ -3,7 +3,6 @@
 import React, { createContext, useContext } from "react";
 import { Session as LuciaSession } from "lucia";
 
-// Define the UserRole enum to match Prisma
 export type UserRole =
   | "USER"
   | "CUSTOMER"
@@ -12,7 +11,6 @@ export type UserRole =
   | "ADMIN"
   | "SUPERADMIN";
 
-// Define the SessionUser type with only the safe fields we want to expose
 export interface SessionUser {
   id: string;
   username: string;
@@ -26,18 +24,16 @@ export interface SessionUser {
   role: UserRole;
 }
 
-// Extend Lucia's Session type with our user type
 export interface SessionWithUser extends LuciaSession {
   user: SessionUser;
 }
 
-// Define the context interface
-interface SessionContext {
-  user: SessionUser;
-  session: SessionWithUser;
+interface SessionContextValue {
+  user: SessionUser | null;
+  session: SessionWithUser | null;
 }
 
-const SessionContext = createContext<SessionContext | null>(null);
+const SessionContext = createContext<SessionContextValue | null>(null);
 
 export default function SessionProvider({
   children,
@@ -45,17 +41,18 @@ export default function SessionProvider({
 }: {
   children: React.ReactNode;
   value: {
-    user: SessionUser;
-    session: LuciaSession;
+    user: SessionUser | null;
+    session: LuciaSession | null;
   };
 }) {
-  // Transform the value to match our SessionContext type
-  const sessionValue: SessionContext = {
+  const sessionValue: SessionContextValue = {
     user: value.user,
-    session: {
-      ...value.session,
-      user: value.user,
-    },
+    session: value.session
+      ? {
+          ...value.session,
+          user: value.user!,
+        }
+      : null,
   };
 
   return (

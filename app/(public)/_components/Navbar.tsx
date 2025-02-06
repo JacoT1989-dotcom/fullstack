@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, User } from "lucide-react";
+import { Menu } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -12,18 +12,22 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { useSession } from "@/app/SessionProvider";
+import UserButton from "./UserButton";
 
-const routes = [
+const getRoutes = (isAuthenticated: boolean) => [
   { name: "Home", path: "/" },
-  { name: " Headwear", path: "/all-in-headwear" },
+  { name: "Headwear", path: "/all-in-headwear" },
   { name: "Apparel", path: "/apparel" },
   { name: "All Collections", path: "/all-collections" },
-  { name: "Register", path: "/register" },
+  // Only show Register for non-authenticated users
+  ...(!isAuthenticated ? [{ name: "Register", path: "/register" }] : []),
 ];
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const { user } = useSession();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -33,6 +37,8 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const routes = getRoutes(!!user);
 
   return (
     <header
@@ -62,10 +68,14 @@ export default function Navbar() {
               {route.name}
             </Link>
           ))}
+
+          {/* User Button */}
+          {user && <UserButton />}
         </div>
 
         {/* Mobile Navigation */}
         <div className="md:hidden flex items-center gap-2">
+          {user && <UserButton />}
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon">
