@@ -1,6 +1,6 @@
 // app/products/page.tsx
 import { getApparelProducts } from "./actions";
-import ProductGrid from "./ProductGrid";
+import ProductGrid from "./_components/ProductGrid";
 
 export default async function ProductsPage() {
   const { products, error } = await getApparelProducts();
