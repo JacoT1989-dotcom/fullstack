@@ -18,7 +18,7 @@ const routes = [
   { name: " Headwear", path: "/all-in-headwear" },
   { name: "Apparel", path: "/apparel" },
   { name: "All Collections", path: "/all-collections" },
-  { name: "Contact", path: "/contact" },
+  { name: "Register", path: "/register" },
 ];
 
 export default function Navbar() {
