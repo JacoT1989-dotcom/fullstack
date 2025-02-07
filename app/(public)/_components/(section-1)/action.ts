@@ -4,19 +4,11 @@ import { validateRequest } from "@/auth";
 import { redirect } from "next/navigation";
 import { put } from "@vercel/blob";
 import prisma from "@/lib/prisma";
-import type { SlideResponse } from "./types";
-
-const ALLOWED_IMAGE_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/gif",
-  "image/webp",
-  "image/svg+xml",
-  "image/bmp",
-  "image/tiff",
-];
-
-const MAX_IMAGE_SIZE = 6 * 1024 * 1024; // 6MB
+import {
+  ALLOWED_IMAGE_TYPES,
+  MAX_IMAGE_SIZE,
+  type SlideResponse,
+} from "./types";
 
 export async function createSlide(formData: FormData): Promise<SlideResponse> {
   try {

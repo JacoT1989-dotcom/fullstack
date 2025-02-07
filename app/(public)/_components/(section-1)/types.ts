@@ -58,3 +58,15 @@ export interface SlidesResponse {
   data?: Slide[];
   error?: string;
 }
+
+export const ALLOWED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "image/svg+xml",
+  "image/bmp",
+  "image/tiff",
+];
+
+export const MAX_IMAGE_SIZE = 6 * 1024 * 1024; // 6MB

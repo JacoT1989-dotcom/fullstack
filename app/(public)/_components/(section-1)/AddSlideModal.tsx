@@ -1,17 +1,25 @@
 "use client";
 
-import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -19,12 +27,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useState } from "react";
+import { toast } from "sonner";
 import { createSlide } from "./action";
+import { createSlideSchema, type CreateSlideInput } from "./validations";
 
 interface AddSlideModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void; // Callback for when slide is successfully created
+  onSuccess: () => void;
 }
 
 const bgColorOptions = [
@@ -39,116 +50,172 @@ const AddSlideModal: React.FC<AddSlideModalProps> = ({
   onClose,
   onSuccess,
 }) => {
-  const [isPending, setIsPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsPending(true);
-    setError(null);
+  const form = useForm<CreateSlideInput>({
+    resolver: zodResolver(createSlideSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      bgColor: "",
+      order: 1,
+    },
+  });
 
+  async function onSubmit(data: CreateSlideInput) {
     try {
-      const form = e.currentTarget;
-      const formData = new FormData(form);
+      setLoading(true);
+      const formData = new FormData();
 
-      const response = await createSlide(formData);
+      formData.append("sliderImage", data.sliderImage);
+      formData.append("title", data.title);
+      formData.append("description", data.description);
+      formData.append("bgColor", data.bgColor);
+      formData.append("order", data.order.toString());
 
-      if (!response.success) {
-        throw new Error(response.error);
+      const result = await createSlide(formData);
+
+      if (!result.success) {
+        throw new Error(result.error);
       }
 
+      toast.success("Slide created successfully!");
+      form.reset();
       onSuccess();
       onClose();
-      form.reset();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create slide",
+      );
     } finally {
-      setIsPending(false);
+      setLoading(false);
     }
-  };
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
           <DialogTitle>Add New Slide</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
-            <Input
-              id="title"
-              name="title"
-              placeholder="Enter slide title"
-              required
-            />
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="sliderImage">Slide Image</Label>
-            <Input
-              id="sliderImage"
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
               name="sliderImage"
-              type="file"
-              accept="image/*"
-              required
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Slide Image</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => field.onChange(e.target.files?.[0])}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Upload a slide image (max 6MB)
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter slide title" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="order"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Order</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={1}
+                        placeholder="1"
+                        {...field}
+                        onChange={(e) => field.onChange(Number(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="bgColor"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Background Color</FormLabel>
+                  <FormControl>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a color" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {bgColorOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="description"
-              placeholder="Enter slide description"
-              required
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Enter slide description"
+                      className="resize-none"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="bgColor">Background Color</Label>
-            <Select name="bgColor" required>
-              <SelectTrigger id="bgColor">
-                <SelectValue placeholder="Select a color" />
-              </SelectTrigger>
-              <SelectContent>
-                {bgColorOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="order">Order</Label>
-            <Input
-              id="order"
-              name="order"
-              type="number"
-              min={1}
-              defaultValue={1}
-              required
-            />
-          </div>
-
-          {error && <p className="text-sm text-red-500">{error}</p>}
-
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isPending}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? "Adding..." : "Add Slide"}
-            </Button>
-          </DialogFooter>
-        </form>
+            <div className="flex justify-end space-x-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loading}>
+                {loading ? "Creating..." : "Create Slide"}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
