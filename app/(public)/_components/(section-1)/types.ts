@@ -1,6 +1,7 @@
 // Base types that match the Prisma schema
 export interface Slide {
   id: string;
+  sliderImageurl: string; // Added to match Prisma schema
   title: string;
   description: string;
   bgColor: string;
@@ -12,6 +13,7 @@ export interface Slide {
 
 // Type for creating a new slide
 export interface CreateSlideInput {
+  sliderImageurl: string; // Added to match Prisma schema
   title: string;
   description: string;
   bgColor: string;
@@ -21,6 +23,7 @@ export interface CreateSlideInput {
 // Type for updating a slide
 export interface UpdateSlideInput {
   id: string;
+  sliderImageurl?: string; // Added as optional field for updates
   title?: string;
   description?: string;
   bgColor?: string;

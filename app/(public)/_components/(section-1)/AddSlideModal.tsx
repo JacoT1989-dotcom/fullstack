@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -19,18 +19,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { CreateSlideInput } from "./types";
 
-interface SlideFormDialogProps {
+interface AddSlideModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: CreateSlideInput) => void;
-}
-
-interface CreateSlideInput {
-  title: string;
-  description: string;
-  bgColor: string;
-  order: number;
 }
 
 const bgColorOptions = [
@@ -40,23 +34,29 @@ const bgColorOptions = [
   { value: "bg-red-500", label: "Red" },
 ];
 
-const SlideFormDialog: React.FC<SlideFormDialogProps> = ({
+const AddSlideModal: React.FC<AddSlideModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
 }) => {
-  const [formData, setFormData] = React.useState<CreateSlideInput>({
+  const [formData, setFormData] = useState<CreateSlideInput>({
     title: "",
     description: "",
     bgColor: "",
+    sliderImageurl: "",
     order: 1,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData);
-    setFormData({ title: "", description: "", bgColor: "", order: 1 });
-    onClose();
+    setFormData({
+      title: "",
+      description: "",
+      bgColor: "",
+      sliderImageurl: "",
+      order: 1,
+    });
   };
 
   return (
@@ -75,6 +75,19 @@ const SlideFormDialog: React.FC<SlideFormDialogProps> = ({
                 setFormData({ ...formData, title: e.target.value })
               }
               placeholder="Enter slide title"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="sliderImageurl">Image URL</Label>
+            <Input
+              id="sliderImageurl"
+              value={formData.sliderImageurl}
+              onChange={(e) =>
+                setFormData({ ...formData, sliderImageurl: e.target.value })
+              }
+              placeholder="Enter image URL"
               required
             />
           </div>
@@ -122,7 +135,10 @@ const SlideFormDialog: React.FC<SlideFormDialogProps> = ({
               min={1}
               value={formData.order}
               onChange={(e) =>
-                setFormData({ ...formData, order: parseInt(e.target.value) })
+                setFormData({
+                  ...formData,
+                  order: parseInt(e.target.value),
+                })
               }
               required
             />
@@ -140,4 +156,4 @@ const SlideFormDialog: React.FC<SlideFormDialogProps> = ({
   );
 };
 
-export default SlideFormDialog;
+export default AddSlideModal;

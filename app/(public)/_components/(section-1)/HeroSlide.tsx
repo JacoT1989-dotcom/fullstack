@@ -1,39 +1,16 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
-import type { Slide } from "./types";
+import type { Slide, CreateSlideInput } from "./types";
+import AddSlideModal from "./AddSlideModal";
 import {
   SLIDE_INTERVAL,
   getNextSlideIndex,
   getPrevSlideIndex,
   slideTranslateClasses,
 } from "./utils";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
-interface CreateSlideInput {
-  title: string;
-  description: string;
-  bgColor: string;
-  order: number;
-}
 
 interface HeroSliderProps {
   slides?: Slide[];
@@ -41,13 +18,6 @@ interface HeroSliderProps {
   interval?: number;
   onAddSlide?: (data: CreateSlideInput) => void;
 }
-
-const bgColorOptions = [
-  { value: "bg-blue-500", label: "Blue" },
-  { value: "bg-purple-500", label: "Purple" },
-  { value: "bg-green-500", label: "Green" },
-  { value: "bg-red-500", label: "Red" },
-];
 
 const HeroSlider: React.FC<HeroSliderProps> = ({
   slides = [],
@@ -57,12 +27,6 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
 }) => {
   const [currentSlide, setCurrentSlide] = useState<number>(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState<CreateSlideInput>({
-    title: "",
-    description: "",
-    bgColor: "",
-    order: 1,
-  });
   const EMPTY_SLOTS = 4;
 
   const nextSlide = () => {
@@ -80,10 +44,8 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
     return () => clearInterval(timer);
   }, [autoPlay, interval, slides.length, isModalOpen]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onAddSlide?.(formData);
-    setFormData({ title: "", description: "", bgColor: "", order: 1 });
+  const handleAddSlide = (data: CreateSlideInput) => {
+    onAddSlide?.(data);
     setIsModalOpen(false);
   };
 
@@ -137,90 +99,11 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
           ))}
         </div>
 
-        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Add New Slide</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Title</Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
-                  }
-                  placeholder="Enter slide title"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  placeholder="Enter slide description"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="bgColor">Background Color</Label>
-                <Select
-                  value={formData.bgColor}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, bgColor: value })
-                  }
-                  required
-                >
-                  <SelectTrigger id="bgColor">
-                    <SelectValue placeholder="Select a color" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {bgColorOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="order">Order</Label>
-                <Input
-                  id="order"
-                  type="number"
-                  min={1}
-                  value={formData.order}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      order: parseInt(e.target.value),
-                    })
-                  }
-                  required
-                />
-              </div>
-
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsModalOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit">Add Slide</Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <AddSlideModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSubmit={handleAddSlide}
+        />
       </div>
     );
   }
@@ -235,10 +118,22 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
         {slides.map((slide) => (
           <div
             key={slide.id}
-            className={`flex-shrink-0 w-full h-full ${slide.bgColor} flex flex-col items-center justify-center text-white`}
+            className={`flex-shrink-0 w-full h-full ${slide.bgColor} flex flex-col items-center justify-center text-white relative`}
           >
-            <h2 className="text-4xl font-bold mb-4">{slide.title}</h2>
-            <p className="text-xl">{slide.description}</p>
+            {slide.sliderImageurl && (
+              <Image
+                src={slide.sliderImageurl}
+                alt={slide.title}
+                fill
+                priority
+                className="object-cover"
+                sizes="100vw"
+              />
+            )}
+            <div className="relative z-10">
+              <h2 className="text-4xl font-bold mb-4">{slide.title}</h2>
+              <p className="text-xl">{slide.description}</p>
+            </div>
           </div>
         ))}
       </div>
