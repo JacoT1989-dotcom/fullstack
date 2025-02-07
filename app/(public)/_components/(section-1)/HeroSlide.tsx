@@ -3,9 +3,19 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Plus, Pencil, Trash } from "lucide-react";
+import { toast } from "sonner";
 import type { Slide } from "./types";
 import AddSlideModal from "./AddSlideModal";
 import EditSlideModal from "./EditSlideModal";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import {
   SLIDE_INTERVAL,
   getNextSlideIndex,
@@ -13,7 +23,8 @@ import {
   slideTranslateClasses,
 } from "./utils";
 import type { UserRole } from "@prisma/client";
-import { getSlides } from "./get-slides-actions";
+import { getSlides } from "./_crud-actions/get-slides-actions";
+import { deleteSlide } from "./_crud-actions/delete-actions";
 
 interface HeroSliderProps {
   autoPlay?: boolean;
@@ -31,11 +42,14 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
   const [currentSlide, setCurrentSlide] = useState<number>(0);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const EMPTY_SLOTS = 4;
   const isEditor = userRole === "EDITOR";
 
-  // Compute if slider should be paused (either modal is open)
-  const isPaused = isAddModalOpen || isEditModalOpen;
+  // Compute if slider should be paused (any modal is open or delete in progress)
+  const isPaused =
+    isAddModalOpen || isEditModalOpen || isDeleteModalOpen || isDeleting;
 
   useEffect(() => {
     fetchSlides();
@@ -58,7 +72,6 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
     setCurrentSlide((current) => getPrevSlideIndex(current, totalSlides));
   }, [slides.length]);
 
-  // Only auto-advance if autoPlay is true and not paused
   useEffect(() => {
     if (!autoPlay || isPaused) return;
 
@@ -79,8 +92,36 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
   };
 
   const handleDeleteClick = () => {
-    // Implement delete functionality
-    console.log("Delete slide:", currentSlide);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    const slide = slides[currentSlide];
+    if (!slide) return;
+
+    try {
+      setIsDeleting(true);
+      const result = await deleteSlide(slide.id);
+
+      if (result.success) {
+        toast.success("Slide deleted successfully");
+        await fetchSlides();
+
+        // Adjust current slide index if necessary
+        if (currentSlide >= slides.length - 1) {
+          setCurrentSlide(Math.max(0, slides.length - 2));
+        }
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete slide",
+      );
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteModalOpen(false);
+    }
   };
 
   // Show a minimal placeholder for non-editors when there are no slides
@@ -163,6 +204,7 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
               onClick={handleDeleteClick}
               className="hover:text-blue-400 transition-colors"
               aria-label="Delete current slide"
+              disabled={isDeleting}
             >
               <Trash className="w-5 h-5 text-white" />
             </button>
@@ -184,6 +226,34 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
           slide={slides[currentSlide]}
         />
       )}
+
+      <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Delete</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this slide? This action cannot be
+              undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteModalOpen(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div
         className={`flex transition-transform duration-1000 ease-in-out h-full ${

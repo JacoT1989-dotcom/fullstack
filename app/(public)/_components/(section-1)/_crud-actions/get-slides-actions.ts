@@ -2,7 +2,7 @@
 
 import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
-import { type SlidesResponse } from "./types";
+import { type SlidesResponse } from "../types";
 
 export async function getSlides(): Promise<SlidesResponse> {
   try {

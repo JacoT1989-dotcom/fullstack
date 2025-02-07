@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/select";
 import { useState } from "react";
 import { toast } from "sonner";
-import { createSlide } from "./action";
+import { createSlide } from "./_crud-actions/action";
 import { createSlideSchema, type CreateSlideInput } from "./validations";
 
 interface AddSlideModalProps {

@@ -31,7 +31,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { type Slide } from "./types";
 import { createSlideSchema } from "./validations";
-import { updateSlide } from "./action";
+import { updateSlide } from "./_crud-actions/update-actions";
 
 interface EditSlideModalProps {
   isOpen: boolean;

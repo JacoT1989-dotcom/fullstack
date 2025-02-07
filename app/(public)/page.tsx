@@ -1,5 +1,5 @@
 import { validateRequest } from "@/auth";
-import { getSlides } from "./_components/(section-1)/get-slides-actions";
+import { getSlides } from "./_components/(section-1)/_crud-actions/get-slides-actions";
 import HeroSlider from "./_components/(section-1)/HeroSlide";
 
 export default async function Home() {
