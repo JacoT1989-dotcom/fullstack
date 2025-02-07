@@ -11,12 +11,14 @@ import {
   getPrevSlideIndex,
   slideTranslateClasses,
 } from "./utils";
+import type { UserRole } from "@prisma/client";
 
 interface HeroSliderProps {
   slides?: Slide[];
   autoPlay?: boolean;
   interval?: number;
   onAddSlide?: (data: CreateSlideInput) => void;
+  userRole?: UserRole;
 }
 
 const HeroSlider: React.FC<HeroSliderProps> = ({
@@ -24,10 +26,13 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
   autoPlay = true,
   interval = SLIDE_INTERVAL,
   onAddSlide,
+  userRole,
 }) => {
   const [currentSlide, setCurrentSlide] = useState<number>(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const EMPTY_SLOTS = 4;
+  const isEditor =
+    userRole === "EDITOR" || userRole === "ADMIN" || userRole === "SUPERADMIN";
 
   const nextSlide = () => {
     setCurrentSlide((current) => getNextSlideIndex(current, EMPTY_SLOTS));
@@ -49,7 +54,17 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
     setIsModalOpen(false);
   };
 
-  if (slides.length === 0) {
+  // Show a minimal placeholder for non-editors when there are no slides
+  if (slides.length === 0 && !isEditor) {
+    return (
+      <div className="relative w-screen h-[300px] bg-gray-100 flex items-center justify-center">
+        <p className="text-gray-500">No content available</p>
+      </div>
+    );
+  }
+
+  // Show empty slots with add buttons only for editors
+  if (slides.length === 0 && isEditor) {
     return (
       <div className="relative w-screen h-[300px] overflow-hidden">
         <div className="flex h-full">
@@ -108,6 +123,7 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
     );
   }
 
+  // Regular slider view for when there are slides
   return (
     <div className="relative w-screen h-[300px] overflow-hidden">
       <div

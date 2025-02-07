@@ -1,16 +1,14 @@
 import HeroSlider from "./_components/(section-1)/HeroSlide";
-import { Slide } from "./_components/(section-1)/types";
+import { validateRequest } from "@/auth";
 
-// Example data - you might want to fetch this from an API or database
-const heroSlides: Slide[] = [
-  // You'll need to populate this with your slide data
-];
+export default async function Home() {
+  const { user } = await validateRequest();
+  const userRole = user?.role ?? "USER";
 
-export default function Home() {
   return (
     <div className="mt-20">
       {/* (section 1) */}
-      <HeroSlider slides={heroSlides} />
+      <HeroSlider slides={[]} userRole={userRole} />
     </div>
   );
 }
