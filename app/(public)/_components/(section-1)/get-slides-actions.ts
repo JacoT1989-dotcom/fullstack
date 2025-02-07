@@ -6,9 +6,7 @@ import { type SlidesResponse } from "./types";
 
 export async function getSlides(): Promise<SlidesResponse> {
   try {
-    const { user } = await validateRequest();
-    if (!user) throw new Error("Unauthorized access");
-
+    // Remove the authentication requirement entirely
     const slides = await prisma.slide.findMany({
       orderBy: {
         order: "asc",

@@ -1,13 +1,17 @@
-import HeroSlider from "./_components/(section-1)/HeroSlide";
 import { validateRequest } from "@/auth";
+import { getSlides } from "./_components/(section-1)/get-slides-actions";
+import HeroSlider from "./_components/(section-1)/HeroSlide";
 
 export default async function Home() {
-  const { user } = await validateRequest();
+  const [slidesResponse, { user }] = await Promise.all([
+    getSlides(),
+    validateRequest(),
+  ]);
+
   const userRole = user?.role ?? "USER";
 
   return (
     <div className="mt-20">
-      {/* (section 1) */}
       <HeroSlider userRole={userRole} />
     </div>
   );

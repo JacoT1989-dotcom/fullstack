@@ -44,14 +44,16 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
   };
 
   const nextSlide = useCallback(() => {
-    const totalSlots = Math.max(EMPTY_SLOTS, slides.length);
-    setCurrentSlide((current) => getNextSlideIndex(current, totalSlots));
-  }, [slides.length, EMPTY_SLOTS]);
+    // Only use actual slides.length for navigation if there are slides
+    const totalSlides = slides.length > 0 ? slides.length : EMPTY_SLOTS;
+    setCurrentSlide((current) => getNextSlideIndex(current, totalSlides));
+  }, [slides.length]);
 
   const prevSlide = useCallback(() => {
-    const totalSlots = Math.max(EMPTY_SLOTS, slides.length);
-    setCurrentSlide((current) => getPrevSlideIndex(current, totalSlots));
-  }, [slides.length, EMPTY_SLOTS]);
+    // Only use actual slides.length for navigation if there are slides
+    const totalSlides = slides.length > 0 ? slides.length : EMPTY_SLOTS;
+    setCurrentSlide((current) => getPrevSlideIndex(current, totalSlides));
+  }, [slides.length]);
 
   useEffect(() => {
     if (!autoPlay || isModalOpen) return;
@@ -86,6 +88,10 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
       </div>
     );
   }
+
+  const totalSlotsToShow = isEditor
+    ? Math.max(EMPTY_SLOTS, slides.length)
+    : slides.length;
 
   const renderSlideContent = (index: number) => {
     const slide = slides[index];
@@ -172,28 +178,32 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
           slideTranslateClasses[currentSlide]
         }`}
       >
-        {[...Array(Math.max(EMPTY_SLOTS, slides.length))].map((_, index) =>
+        {[...Array(totalSlotsToShow)].map((_, index) =>
           renderSlideContent(index),
         )}
       </div>
 
-      <button
-        onClick={prevSlide}
-        className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/30 p-2 rounded-full hover:bg-white/50 transition-colors"
-        aria-label="Previous slide"
-      >
-        <ChevronLeft className="w-6 h-6 text-white" />
-      </button>
-      <button
-        onClick={nextSlide}
-        className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/30 p-2 rounded-full hover:bg-white/50 transition-colors"
-        aria-label="Next slide"
-      >
-        <ChevronRight className="w-6 h-6 text-white" />
-      </button>
+      {slides.length > 0 && (
+        <>
+          <button
+            onClick={prevSlide}
+            className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/30 p-2 rounded-full hover:bg-white/50 transition-colors"
+            aria-label="Previous slide"
+          >
+            <ChevronLeft className="w-6 h-6 text-white" />
+          </button>
+          <button
+            onClick={nextSlide}
+            className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/30 p-2 rounded-full hover:bg-white/50 transition-colors"
+            aria-label="Next slide"
+          >
+            <ChevronRight className="w-6 h-6 text-white" />
+          </button>
+        </>
+      )}
 
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
-        {[...Array(Math.max(EMPTY_SLOTS, slides.length))].map((_, index) => (
+        {[...Array(totalSlotsToShow)].map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentSlide(index)}
