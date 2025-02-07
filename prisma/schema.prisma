@@ -71,13 +71,14 @@ model Product {
 }
 
 model Slide {
-  id          String @id @default(uuid())
-  title       String
-  description String
-  bgColor     String
-  order       Int // Added to maintain slide order
-  userId      String
-  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id             String @id @default(uuid())
+  sliderImageurl String
+  title          String
+  description    String
+  bgColor        String
+  order          Int // Added to maintain slide order
+  userId         String
+  user           User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
