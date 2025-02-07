@@ -31,8 +31,7 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
   const [currentSlide, setCurrentSlide] = useState<number>(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const EMPTY_SLOTS = 4;
-  const isEditor =
-    userRole === "EDITOR" || userRole === "ADMIN" || userRole === "SUPERADMIN";
+  const isEditor = userRole === "EDITOR";
 
   const nextSlide = () => {
     setCurrentSlide((current) => getNextSlideIndex(current, EMPTY_SLOTS));
