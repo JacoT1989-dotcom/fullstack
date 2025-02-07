@@ -8,7 +8,7 @@ export default async function Home() {
   return (
     <div className="mt-20">
       {/* (section 1) */}
-      <HeroSlider slides={[]} userRole={userRole} />
+      <HeroSlider userRole={userRole} />
     </div>
   );
 }
