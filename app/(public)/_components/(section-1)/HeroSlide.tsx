@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Pencil, Trash } from "lucide-react";
 import type { Slide } from "./types";
 import AddSlideModal from "./AddSlideModal";
 import {
@@ -64,6 +64,20 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
     fetchSlides();
   };
 
+  const handleAddClick = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleEditClick = () => {
+    // Implement edit functionality
+    console.log("Edit slide:", currentSlide);
+  };
+
+  const handleDeleteClick = () => {
+    // Implement delete functionality
+    console.log("Delete slide:", currentSlide);
+  };
+
   // Show a minimal placeholder for non-editors when there are no slides
   if (slides.length === 0 && !isEditor) {
     return (
@@ -114,6 +128,45 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
 
   return (
     <div className="relative w-screen h-[300px] overflow-hidden">
+      {isEditor && slides[currentSlide] && (
+        <div className="absolute top-4 right-4 z-20 bg-black/50 rounded-lg p-2">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => {
+                const emptySlotIndex = slides.length;
+                if (emptySlotIndex < EMPTY_SLOTS) {
+                  setCurrentSlide(emptySlotIndex);
+                }
+              }}
+              className="hover:text-blue-400 transition-colors"
+              aria-label="Go to empty slot"
+            >
+              <Plus className="w-5 h-5 text-white" />
+            </button>
+            <button
+              onClick={handleEditClick}
+              className="hover:text-blue-400 transition-colors"
+              aria-label="Edit current slide"
+            >
+              <Pencil className="w-5 h-5 text-white" />
+            </button>
+            <button
+              onClick={handleDeleteClick}
+              className="hover:text-blue-400 transition-colors"
+              aria-label="Delete current slide"
+            >
+              <Trash className="w-5 h-5 text-white" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      <AddSlideModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={handleSuccess}
+      />
+
       <div
         className={`flex transition-transform duration-1000 ease-in-out h-full ${
           slideTranslateClasses[currentSlide]
@@ -157,12 +210,6 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
           />
         ))}
       </div>
-
-      <AddSlideModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSuccess={handleSuccess}
-      />
     </div>
   );
 };
