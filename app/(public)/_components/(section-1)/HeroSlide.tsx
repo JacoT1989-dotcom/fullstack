@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
-import type { Slide, CreateSlideInput } from "./types";
+import type { Slide } from "./types";
 import AddSlideModal from "./AddSlideModal";
 import {
   SLIDE_INTERVAL,
@@ -17,7 +17,7 @@ interface HeroSliderProps {
   slides?: Slide[];
   autoPlay?: boolean;
   interval?: number;
-  onAddSlide?: (data: CreateSlideInput) => void;
+  onSlidesChange?: () => void; // Changed from onAddSlide to onSlidesChange
   userRole?: UserRole;
 }
 
@@ -25,7 +25,7 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
   slides = [],
   autoPlay = true,
   interval = SLIDE_INTERVAL,
-  onAddSlide,
+  onSlidesChange,
   userRole,
 }) => {
   const [currentSlide, setCurrentSlide] = useState<number>(0);
@@ -48,9 +48,8 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
     return () => clearInterval(timer);
   }, [autoPlay, interval, slides.length, isModalOpen]);
 
-  const handleAddSlide = (data: CreateSlideInput) => {
-    onAddSlide?.(data);
-    setIsModalOpen(false);
+  const handleSuccess = () => {
+    onSlidesChange?.(); // Notify parent component to refresh slides
   };
 
   // Show a minimal placeholder for non-editors when there are no slides
@@ -116,7 +115,7 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
         <AddSlideModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          onSubmit={handleAddSlide}
+          onSuccess={handleSuccess}
         />
       </div>
     );

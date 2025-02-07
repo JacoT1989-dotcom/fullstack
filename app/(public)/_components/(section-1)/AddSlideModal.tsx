@@ -19,12 +19,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { CreateSlideInput } from "./types";
+import { createSlide } from "./action";
 
 interface AddSlideModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: CreateSlideInput) => void;
+  onSuccess: () => void; // Callback for when slide is successfully created
 }
 
 const bgColorOptions = [
@@ -37,26 +37,34 @@ const bgColorOptions = [
 const AddSlideModal: React.FC<AddSlideModalProps> = ({
   isOpen,
   onClose,
-  onSubmit,
+  onSuccess,
 }) => {
-  const [formData, setFormData] = useState<CreateSlideInput>({
-    title: "",
-    description: "",
-    bgColor: "",
-    sliderImageurl: "",
-    order: 1,
-  });
+  const [isPending, setIsPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    onSubmit(formData);
-    setFormData({
-      title: "",
-      description: "",
-      bgColor: "",
-      sliderImageurl: "",
-      order: 1,
-    });
+    setIsPending(true);
+    setError(null);
+
+    try {
+      const form = e.currentTarget;
+      const formData = new FormData(form);
+
+      const response = await createSlide(formData);
+
+      if (!response.success) {
+        throw new Error(response.error);
+      }
+
+      onSuccess();
+      onClose();
+      form.reset();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setIsPending(false);
+    }
   };
 
   return (
@@ -70,24 +78,19 @@ const AddSlideModal: React.FC<AddSlideModalProps> = ({
             <Label htmlFor="title">Title</Label>
             <Input
               id="title"
-              value={formData.title}
-              onChange={(e) =>
-                setFormData({ ...formData, title: e.target.value })
-              }
+              name="title"
               placeholder="Enter slide title"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="sliderImageurl">Image URL</Label>
+            <Label htmlFor="sliderImage">Slide Image</Label>
             <Input
-              id="sliderImageurl"
-              value={formData.sliderImageurl}
-              onChange={(e) =>
-                setFormData({ ...formData, sliderImageurl: e.target.value })
-              }
-              placeholder="Enter image URL"
+              id="sliderImage"
+              name="sliderImage"
+              type="file"
+              accept="image/*"
               required
             />
           </div>
@@ -96,10 +99,7 @@ const AddSlideModal: React.FC<AddSlideModalProps> = ({
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
+              name="description"
               placeholder="Enter slide description"
               required
             />
@@ -107,13 +107,7 @@ const AddSlideModal: React.FC<AddSlideModalProps> = ({
 
           <div className="space-y-2">
             <Label htmlFor="bgColor">Background Color</Label>
-            <Select
-              value={formData.bgColor}
-              onValueChange={(value) =>
-                setFormData({ ...formData, bgColor: value })
-              }
-              required
-            >
+            <Select name="bgColor" required>
               <SelectTrigger id="bgColor">
                 <SelectValue placeholder="Select a color" />
               </SelectTrigger>
@@ -131,24 +125,28 @@ const AddSlideModal: React.FC<AddSlideModalProps> = ({
             <Label htmlFor="order">Order</Label>
             <Input
               id="order"
+              name="order"
               type="number"
               min={1}
-              value={formData.order}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  order: parseInt(e.target.value),
-                })
-              }
+              defaultValue={1}
               required
             />
           </div>
 
+          {error && <p className="text-sm text-red-500">{error}</p>}
+
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={isPending}
+            >
               Cancel
             </Button>
-            <Button type="submit">Add Slide</Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? "Adding..." : "Add Slide"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
