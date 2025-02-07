@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ChevronLeft, ChevronRight, Plus, Pencil, Trash } from "lucide-react";
 import type { Slide } from "./types";
 import AddSlideModal from "./AddSlideModal";
+import EditSlideModal from "./EditSlideModal";
 import {
   SLIDE_INTERVAL,
   getNextSlideIndex,
@@ -28,9 +29,13 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
 }) => {
   const [slides, setSlides] = useState<Slide[]>([]);
   const [currentSlide, setCurrentSlide] = useState<number>(0);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const EMPTY_SLOTS = 4;
   const isEditor = userRole === "EDITOR";
+
+  // Compute if slider should be paused (either modal is open)
+  const isPaused = isAddModalOpen || isEditModalOpen;
 
   useEffect(() => {
     fetchSlides();
@@ -44,35 +49,33 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
   };
 
   const nextSlide = useCallback(() => {
-    // Only use actual slides.length for navigation if there are slides
     const totalSlides = slides.length > 0 ? slides.length : EMPTY_SLOTS;
     setCurrentSlide((current) => getNextSlideIndex(current, totalSlides));
   }, [slides.length]);
 
   const prevSlide = useCallback(() => {
-    // Only use actual slides.length for navigation if there are slides
     const totalSlides = slides.length > 0 ? slides.length : EMPTY_SLOTS;
     setCurrentSlide((current) => getPrevSlideIndex(current, totalSlides));
   }, [slides.length]);
 
+  // Only auto-advance if autoPlay is true and not paused
   useEffect(() => {
-    if (!autoPlay || isModalOpen) return;
+    if (!autoPlay || isPaused) return;
 
     const timer = setInterval(nextSlide, interval);
     return () => clearInterval(timer);
-  }, [autoPlay, interval, isModalOpen, nextSlide]);
+  }, [autoPlay, interval, isPaused, nextSlide]);
 
   const handleSuccess = () => {
     fetchSlides();
   };
 
   const handleAddClick = () => {
-    setIsModalOpen(true);
+    setIsAddModalOpen(true);
   };
 
   const handleEditClick = () => {
-    // Implement edit functionality
-    console.log("Edit slide:", currentSlide);
+    setIsEditModalOpen(true);
   };
 
   const handleDeleteClick = () => {
@@ -122,7 +125,7 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
         <div
           key={`empty-${index}`}
           className="min-w-full h-full flex flex-col items-center justify-center border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
-          onClick={() => setIsModalOpen(true)}
+          onClick={handleAddClick}
         >
           <Plus className="w-12 h-12 text-gray-400 mb-2" />
           <p className="text-xl text-gray-500">Add Slide {index + 1}</p>
@@ -168,10 +171,19 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
       )}
 
       <AddSlideModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
         onSuccess={handleSuccess}
       />
+
+      {slides[currentSlide] && (
+        <EditSlideModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          onSuccess={handleSuccess}
+          slide={slides[currentSlide]}
+        />
+      )}
 
       <div
         className={`flex transition-transform duration-1000 ease-in-out h-full ${
@@ -183,7 +195,7 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
         )}
       </div>
 
-      {slides.length > 0 && (
+      {slides.length > 0 && !isPaused && (
         <>
           <button
             onClick={prevSlide}
