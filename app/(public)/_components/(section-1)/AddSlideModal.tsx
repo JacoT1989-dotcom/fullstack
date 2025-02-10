@@ -29,15 +29,18 @@ import {
 } from "@/components/ui/select";
 import { useState } from "react";
 import { toast } from "sonner";
-import { createSlide } from "./_crud-actions/action";
 import { createSlideSchema, type CreateSlideInput } from "./validations";
+import { useSlideStore } from "./_crud-actions/_store/use-slide-store";
 
+// We define the props interface to include targetIndex for proper slide ordering
 interface AddSlideModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  targetIndex: number; // This determines where the new slide will be inserted
 }
 
+// These color options provide a consistent set of choices for slide backgrounds
 const bgColorOptions = [
   { value: "bg-blue-500", label: "Blue" },
   { value: "bg-purple-500", label: "Purple" },
@@ -49,29 +52,48 @@ const AddSlideModal: React.FC<AddSlideModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
+  targetIndex,
 }) => {
   const [loading, setLoading] = useState(false);
+  // We get both the create and update functions since we might need to reorder existing slides
+  const { createSlide, slides, updateSlide } = useSlideStore();
 
+  // Initialize the form with the target index as the order
   const form = useForm<CreateSlideInput>({
     resolver: zodResolver(createSlideSchema),
     defaultValues: {
       title: "",
       description: "",
       bgColor: "",
-      order: 1,
+      order: targetIndex + 1, // Convert from zero-based index to one-based order
     },
   });
 
   async function onSubmit(data: CreateSlideInput) {
     try {
       setLoading(true);
-      const formData = new FormData();
 
+      // First, we need to handle existing slides that need to be shifted
+      const existingSlides = slides.filter(
+        (slide) => slide.order >= targetIndex + 1,
+      );
+      if (existingSlides.length > 0) {
+        // Update the order of all existing slides that come after our insertion point
+        for (const slide of existingSlides) {
+          const updateFormData = new FormData();
+          updateFormData.append("id", slide.id);
+          updateFormData.append("order", String(slide.order + 1));
+          await updateSlide(updateFormData);
+        }
+      }
+
+      // Now prepare the data for our new slide
+      const formData = new FormData();
       formData.append("sliderImage", data.sliderImage);
       formData.append("title", data.title);
       formData.append("description", data.description);
       formData.append("bgColor", data.bgColor);
-      formData.append("order", data.order.toString());
+      formData.append("order", String(targetIndex + 1));
 
       const result = await createSlide(formData);
 
@@ -79,6 +101,7 @@ const AddSlideModal: React.FC<AddSlideModalProps> = ({
         throw new Error(result.error);
       }
 
+      // Success! The store will automatically update with the new slide
       toast.success("Slide created successfully!");
       form.reset();
       onSuccess();
@@ -96,11 +119,12 @@ const AddSlideModal: React.FC<AddSlideModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
-          <DialogTitle>Add New Slide</DialogTitle>
+          <DialogTitle>Add New Slide (Position {targetIndex + 1})</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Image Upload Field */}
             <FormField
               control={form.control}
               name="sliderImage"
@@ -122,6 +146,7 @@ const AddSlideModal: React.FC<AddSlideModalProps> = ({
               )}
             />
 
+            {/* Title and Order Fields */}
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -137,6 +162,7 @@ const AddSlideModal: React.FC<AddSlideModalProps> = ({
                 )}
               />
 
+              {/* Order field is now disabled and automatically set */}
               <FormField
                 control={form.control}
                 name="order"
@@ -147,9 +173,9 @@ const AddSlideModal: React.FC<AddSlideModalProps> = ({
                       <Input
                         type="number"
                         min={1}
-                        placeholder="1"
+                        placeholder={String(targetIndex + 1)}
+                        disabled
                         {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
                       />
                     </FormControl>
                     <FormMessage />
@@ -158,6 +184,7 @@ const AddSlideModal: React.FC<AddSlideModalProps> = ({
               />
             </div>
 
+            {/* Background Color Selection */}
             <FormField
               control={form.control}
               name="bgColor"
@@ -183,6 +210,7 @@ const AddSlideModal: React.FC<AddSlideModalProps> = ({
               )}
             />
 
+            {/* Description Field */}
             <FormField
               control={form.control}
               name="description"
@@ -201,6 +229,7 @@ const AddSlideModal: React.FC<AddSlideModalProps> = ({
               )}
             />
 
+            {/* Action Buttons */}
             <div className="flex justify-end space-x-2">
               <Button
                 type="button"

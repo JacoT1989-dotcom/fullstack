@@ -31,7 +31,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { type Slide } from "./types";
 import { createSlideSchema } from "./validations";
-import { updateSlide } from "./_crud-actions/update-actions";
+import { useSlideStore } from "./_crud-actions/_store/use-slide-store";
 
 interface EditSlideModalProps {
   isOpen: boolean;
@@ -54,6 +54,7 @@ const EditSlideModal: React.FC<EditSlideModalProps> = ({
   slide,
 }) => {
   const [loading, setLoading] = useState(false);
+  const { updateSlide } = useSlideStore();
 
   const form = useForm({
     resolver: zodResolver(createSlideSchema),
