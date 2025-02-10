@@ -1,12 +1,13 @@
+// _crud-actions/get-slides-actions.ts
 "use server";
 
-import { validateRequest } from "@/auth";
 import prisma from "@/lib/prisma";
 import { type SlidesResponse } from "../types";
+import { cache } from "react";
 
-export async function getSlides(): Promise<SlidesResponse> {
+// Cache the server action
+export const getSlides = cache(async (): Promise<SlidesResponse> => {
   try {
-    // Remove the authentication requirement entirely
     const slides = await prisma.slide.findMany({
       orderBy: {
         order: "asc",
@@ -36,4 +37,4 @@ export async function getSlides(): Promise<SlidesResponse> {
         error instanceof Error ? error.message : "An unexpected error occurred",
     };
   }
-}
+});

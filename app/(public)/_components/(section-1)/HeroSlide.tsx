@@ -23,22 +23,24 @@ import {
   slideTranslateClasses,
 } from "./utils";
 import type { UserRole } from "@prisma/client";
-import { getSlides } from "./_crud-actions/get-slides-actions";
-import { deleteSlide } from "./_crud-actions/delete-actions";
+import { useSlideStore } from "./_crud-actions/_store/use-slide-store";
 
 interface HeroSliderProps {
   autoPlay?: boolean;
   interval?: number;
   onSlidesChange?: () => void;
   userRole?: UserRole;
+  initialSlides: Slide[];
 }
 
 const HeroSlider: React.FC<HeroSliderProps> = ({
   autoPlay = true,
   interval = SLIDE_INTERVAL,
   userRole,
+  initialSlides,
 }) => {
-  const [slides, setSlides] = useState<Slide[]>([]);
+  const { slides, isLoading, fetchSlides, deleteSlide, setSlides } =
+    useSlideStore();
   const [currentSlide, setCurrentSlide] = useState<number>(0);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -47,20 +49,20 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
   const EMPTY_SLOTS = 4;
   const isEditor = userRole === "EDITOR";
 
-  // Compute if slider should be paused (any modal is open or delete in progress)
   const isPaused =
     isAddModalOpen || isEditModalOpen || isDeleteModalOpen || isDeleting;
 
   useEffect(() => {
-    fetchSlides();
-  }, []);
-
-  const fetchSlides = async () => {
-    const response = await getSlides();
-    if (response.success && response.data) {
-      setSlides(response.data);
+    if (initialSlides.length > 0) {
+      setSlides(initialSlides);
     }
-  };
+  }, [initialSlides, setSlides]);
+
+  useEffect(() => {
+    if (slides.length === 0 && !isLoading) {
+      fetchSlides();
+    }
+  }, [slides.length, isLoading, fetchSlides]);
 
   const nextSlide = useCallback(() => {
     const totalSlides = slides.length > 0 ? slides.length : EMPTY_SLOTS;
@@ -105,7 +107,6 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
 
       if (result.success) {
         toast.success("Slide deleted successfully");
-        await fetchSlides();
 
         // Adjust current slide index if necessary
         if (currentSlide >= slides.length - 1) {
@@ -124,7 +125,14 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
     }
   };
 
-  // Show a minimal placeholder for non-editors when there are no slides
+  if (isLoading) {
+    return (
+      <div className="relative w-screen h-[300px] bg-gray-100 flex items-center justify-center">
+        <p className="text-gray-500">Loading...</p>
+      </div>
+    );
+  }
+
   if (slides.length === 0 && !isEditor) {
     return (
       <div className="relative w-screen h-[300px] bg-gray-100 flex items-center justify-center">
@@ -298,7 +306,9 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
                   ? "bg-white/50"
                   : "bg-gray-300"
             }`}
-            aria-label={`Go to ${slides[index] ? "slide" : "empty slot"} ${index + 1}`}
+            aria-label={`Go to ${slides[index] ? "slide" : "empty slot"} ${
+              index + 1
+            }`}
           />
         ))}
       </div>
