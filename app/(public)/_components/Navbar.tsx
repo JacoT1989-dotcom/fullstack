@@ -14,14 +14,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/app/SessionProvider";
 import UserButton from "./UserButton";
+import AuthModal from "@/app/(auth)/_components/AuthTabs";
 
 const getRoutes = (isAuthenticated: boolean) => [
   { name: "Home", path: "/" },
   { name: "Headwear", path: "/all-in-headwear" },
   { name: "Apparel", path: "/apparel" },
   { name: "All Collections", path: "/all-collections" },
-  // Only show Register for non-authenticated users
-  ...(!isAuthenticated ? [{ name: "Register", path: "/register" }] : []),
 ];
 
 export default function Navbar() {
@@ -69,12 +68,15 @@ export default function Navbar() {
             </Link>
           ))}
 
-          {/* User Button */}
+          {/* Auth Button - Show AuthModal for non-authenticated users, UserButton for authenticated users */}
+          {!user && <AuthModal />}
           {user && <UserButton />}
         </div>
 
         {/* Mobile Navigation */}
         <div className="md:hidden flex items-center gap-2">
+          {/* Auth Button - Show AuthModal for non-authenticated users, UserButton for authenticated users */}
+          {!user && <AuthModal />}
           {user && <UserButton />}
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
