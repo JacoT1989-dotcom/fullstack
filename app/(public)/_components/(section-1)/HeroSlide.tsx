@@ -20,6 +20,7 @@ import type { UserRole } from "@prisma/client";
 import { useSlideStore } from "./_crud-actions/_store/use-slide-store";
 import { cn } from "@/lib/utils";
 
+// Define the component's props interface
 interface HeroSliderProps {
   autoPlay?: boolean;
   interval?: number;
@@ -28,6 +29,7 @@ interface HeroSliderProps {
   initialSlides: Slide[];
 }
 
+// Translation classes for slide movement animation
 const translateClasses = {
   0: "translate-x-0",
   1: "-translate-x-full",
@@ -43,6 +45,11 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
   userRole,
   initialSlides,
 }) => {
+  // Define constants for slide management
+  const MAX_SLIDES = 4; // Maximum number of slides allowed
+  const EMPTY_SLOTS = 4; // Number of empty slots to show in editor mode
+
+  // Initialize state from store and local state
   const { slides, isLoading, deleteSlide, setSlides } = useSlideStore();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -51,13 +58,15 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [targetIndex, setTargetIndex] = useState<number | null>(null);
-  const EMPTY_SLOTS = 4;
+
+  // Determine if user has editor privileges
   const isEditor = userRole === "EDITOR";
 
-  // Check if any modal is open
+  // Track modal states
   const isModalOpen =
     isAddModalOpen || isEditModalOpen || isDeleteModalOpen || isDeleting;
 
+  // Initialize slides from props
   useEffect(() => {
     if (!isInitialized && initialSlides?.length > 0) {
       setSlides(initialSlides);
@@ -65,6 +74,7 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
     }
   }, [initialSlides, setSlides, isInitialized]);
 
+  // Navigation handlers
   const nextSlide = useCallback(() => {
     const totalSlides = Math.max(slides.length, EMPTY_SLOTS);
     setCurrentSlide((current) => (current + 1) % totalSlides);
@@ -75,16 +85,16 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
     setCurrentSlide((current) => (current - 1 + totalSlides) % totalSlides);
   }, [slides.length]);
 
-  // Modified autoplay effect to consider modal state
+  // Autoplay functionality
   useEffect(() => {
     if (!autoPlay || isLoading || isModalOpen) return;
-
     const timer = setInterval(nextSlide, interval);
     return () => clearInterval(timer);
   }, [autoPlay, interval, nextSlide, isLoading, isModalOpen]);
 
+  // Modal and slide management handlers
   const handleSuccess = useCallback(() => {
-    // The store will handle the state update automatically
+    // Store handles state updates automatically
   }, []);
 
   const handleAddClick = useCallback((index: number) => {
@@ -93,12 +103,12 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
     setIsAddModalOpen(true);
   }, []);
 
-  // Add modal close handler
   const handleModalClose = useCallback(() => {
     setIsAddModalOpen(false);
     setTargetIndex(null);
   }, []);
 
+  // Loading state
   if (isLoading && !isEditor) {
     return (
       <div className="relative w-screen h-[300px] bg-gray-100 flex items-center justify-center">
@@ -107,23 +117,26 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
     );
   }
 
+  // Calculate how many slots to display
   const totalSlotsToShow = isEditor
-    ? Math.max(EMPTY_SLOTS, slides.length)
+    ? Math.min(Math.max(EMPTY_SLOTS, slides.length), MAX_SLIDES)
     : Math.max(1, slides.length);
 
   return (
     <div className="relative w-screen h-[300px] overflow-hidden bg-gray-100">
-      {/* Editor Controls */}
+      {/* Editor Controls - Only show Add button if under MAX_SLIDES */}
       {isEditor && slides[currentSlide] && (
         <div className="absolute top-4 right-4 z-20 bg-black/50 rounded-lg p-2">
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => handleAddClick(slides.length)}
-              className="hover:text-blue-400 transition-colors"
-              aria-label="Add new slide"
-            >
-              <Plus className="w-5 h-5 text-white" />
-            </button>
+            {slides.length < MAX_SLIDES && (
+              <button
+                onClick={() => handleAddClick(slides.length)}
+                className="hover:text-blue-400 transition-colors"
+                aria-label="Add new slide"
+              >
+                <Plus className="w-5 h-5 text-white" />
+              </button>
+            )}
             <button
               onClick={() => setIsEditModalOpen(true)}
               className="hover:text-blue-400 transition-colors"
@@ -175,7 +188,7 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
                 </div>
               </div>
             );
-          } else if (isEditor) {
+          } else if (isEditor && slides.length < MAX_SLIDES) {
             return (
               <div
                 key={`empty-${index}`}
@@ -248,6 +261,7 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
         />
       )}
 
+      {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
         <DialogContent>
           <DialogHeader>
