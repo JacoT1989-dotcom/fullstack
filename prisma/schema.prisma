@@ -9,14 +9,14 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(uuid())
-  username      String    @unique
+  id            String       @id @default(uuid())
+  username      String       @unique
   firstName     String
   lastName      String
   displayName   String
-  email         String    @unique
+  email         String       @unique
   passwordHash  String
-  phoneNumber   String    @default("")
+  phoneNumber   String       @default("")
   streetAddress String
   suburb        String?
   townCity      String
@@ -24,11 +24,12 @@ model User {
   country       String
   avatarUrl     String?
   backgroundUrl String?
-  agreeTerms    Boolean   @default(false)
-  role          UserRole  @default(USER)
+  agreeTerms    Boolean      @default(false)
+  role          UserRole     @default(USER)
   Session       Session[]
   Product       Product[]
   Slide         Slide[]
+  TabProduct    TabProduct[]
 
   @@map("users")
 }
@@ -84,4 +85,28 @@ model Slide {
   updatedAt DateTime @updatedAt
 
   @@map("slides")
+}
+
+model TabProduct {
+  id          String      @id @default(uuid())
+  name        String
+  price       Float
+  rating      Int         @default(0)
+  imageUrl    String
+  tabCategory TabCategory @default(NEW_ARRIVALS)
+  isActive    Boolean     @default(true)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("tab_products")
+}
+
+enum TabCategory {
+  NEW_ARRIVALS
+  BEST_SELLER
+  ON_SALE
 }
