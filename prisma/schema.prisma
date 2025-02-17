@@ -9,14 +9,14 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(uuid())
-  username      String    @unique
+  id            String       @id @default(uuid())
+  username      String       @unique
   firstName     String
   lastName      String
   displayName   String
-  email         String    @unique
+  email         String       @unique
   passwordHash  String
-  phoneNumber   String    @default("")
+  phoneNumber   String       @default("")
   streetAddress String
   suburb        String?
   townCity      String
@@ -24,11 +24,14 @@ model User {
   country       String
   avatarUrl     String?
   backgroundUrl String?
-  agreeTerms    Boolean   @default(false)
-  role          UserRole  @default(USER)
+  agreeTerms    Boolean      @default(false)
+  role          UserRole     @default(USER)
   Session       Session[]
   Product       Product[]
   Slide         Slide[]
+  NewArrival    NewArrival[]
+  BestSeller    BestSeller[]
+  OnSale        OnSale[]
 
   @@map("users")
 }
@@ -84,4 +87,47 @@ model Slide {
   updatedAt DateTime @updatedAt
 
   @@map("slides")
+}
+
+model NewArrival {
+  id        String   @id @default(uuid())
+  name      String
+  price     Float
+  rating    Int
+  imageUrl  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("new_arrivals")
+}
+
+model BestSeller {
+  id        String   @id @default(uuid())
+  name      String
+  price     Float
+  rating    Int
+  imageUrl  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("best_sellers")
+}
+
+model OnSale {
+  id            String   @id @default(uuid())
+  name          String
+  originalPrice Float
+  salePrice     Float
+  rating        Int
+  imageUrl      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("on_sale")
 }

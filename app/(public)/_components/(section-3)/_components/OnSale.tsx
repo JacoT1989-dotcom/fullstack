@@ -3,13 +3,15 @@ const OnSaleContent = {
     [
       {
         name: "Premium Phone Case",
-        price: "14.99",
+        originalPrice: "14.99",
+        salePrice: "9.99",
         rating: 4,
         image: "/products/phone-case.jpg",
       },
       {
         name: "HD Screen Protector",
-        price: "9.99",
+        originalPrice: "9.99",
+        salePrice: "5.99",
         rating: 4,
         image: "/products/screen-protector.jpg",
       },
@@ -17,13 +19,15 @@ const OnSaleContent = {
     [
       {
         name: "20000mAh Power Bank",
-        price: "29.99",
+        originalPrice: "29.99",
+        salePrice: "19.99",
         rating: 5,
         image: "/products/power-bank.jpg",
       },
       {
         name: "Cable Management Kit",
-        price: "19.99",
+        originalPrice: "19.99",
+        salePrice: "12.99",
         rating: 4,
         image: "/products/cable-organizer.jpg",
       },
@@ -31,13 +35,15 @@ const OnSaleContent = {
     [
       {
         name: "Adjustable Laptop Stand",
-        price: "24.99",
+        originalPrice: "24.99",
+        salePrice: "16.99",
         rating: 4,
         image: "/products/laptop-stand.jpg",
       },
       {
         name: "Privacy Webcam Cover",
-        price: "7.99",
+        originalPrice: "7.99",
+        salePrice: "4.99",
         rating: 4,
         image: "/products/webcam-cover.jpg",
       },
@@ -45,13 +51,15 @@ const OnSaleContent = {
     [
       {
         name: "Gaming Mouse Pad XL",
-        price: "19.99",
+        originalPrice: "19.99",
+        salePrice: "14.99",
         rating: 5,
         image: "/products/mouse-pad.jpg",
       },
       {
         name: "Premium Desk Mat",
-        price: "15.99",
+        originalPrice: "15.99",
+        salePrice: "10.99",
         rating: 4,
         image: "/products/desk-mat.jpg",
       },
@@ -61,25 +69,29 @@ const OnSaleContent = {
     [
       {
         name: "Premium Phone Case",
-        price: "14.99",
+        originalPrice: "14.99",
+        salePrice: "9.99",
         rating: 4,
         image: "/products/phone-case.jpg",
       },
       {
         name: "HD Screen Protector",
-        price: "9.99",
+        originalPrice: "9.99",
+        salePrice: "5.99",
         rating: 4,
         image: "/products/screen-protector.jpg",
       },
       {
         name: "20000mAh Power Bank",
-        price: "29.99",
+        originalPrice: "29.99",
+        salePrice: "19.99",
         rating: 5,
         image: "/products/power-bank.jpg",
       },
       {
         name: "Cable Management Kit",
-        price: "19.99",
+        originalPrice: "19.99",
+        salePrice: "12.99",
         rating: 4,
         image: "/products/cable-organizer.jpg",
       },
@@ -87,25 +99,29 @@ const OnSaleContent = {
     [
       {
         name: "Adjustable Laptop Stand",
-        price: "24.99",
+        originalPrice: "24.99",
+        salePrice: "16.99",
         rating: 4,
         image: "/products/laptop-stand.jpg",
       },
       {
         name: "Privacy Webcam Cover",
-        price: "7.99",
+        originalPrice: "7.99",
+        salePrice: "4.99",
         rating: 4,
         image: "/products/webcam-cover.jpg",
       },
       {
         name: "Gaming Mouse Pad XL",
-        price: "19.99",
+        originalPrice: "19.99",
+        salePrice: "14.99",
         rating: 5,
         image: "/products/mouse-pad.jpg",
       },
       {
         name: "Premium Desk Mat",
-        price: "15.99",
+        originalPrice: "15.99",
+        salePrice: "10.99",
         rating: 4,
         image: "/products/desk-mat.jpg",
       },
