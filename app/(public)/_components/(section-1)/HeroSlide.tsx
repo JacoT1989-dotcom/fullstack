@@ -20,7 +20,6 @@ import type { UserRole } from "@prisma/client";
 import { useSlideStore } from "./_crud-actions/_store/use-slide-store";
 import { cn } from "@/lib/utils";
 
-// Define the component's props interface
 interface HeroSliderProps {
   autoPlay?: boolean;
   interval?: number;
@@ -29,27 +28,15 @@ interface HeroSliderProps {
   initialSlides: Slide[];
 }
 
-// Translation classes for slide movement animation
-const translateClasses = {
-  0: "translate-x-0",
-  1: "-translate-x-full",
-  2: "-translate-x-[200%]",
-  3: "-translate-x-[300%]",
-  4: "-translate-x-[400%]",
-  5: "-translate-x-[500%]",
-} as const;
-
 const HeroSlider: React.FC<HeroSliderProps> = ({
   autoPlay = true,
   interval = SLIDE_INTERVAL,
   userRole,
   initialSlides,
 }) => {
-  // Define constants for slide management
-  const MAX_SLIDES = 4; // Maximum number of slides allowed
-  const EMPTY_SLOTS = 4; // Number of empty slots to show in editor mode
+  const MAX_SLIDES = 4;
+  const EMPTY_SLOTS = 4;
 
-  // Initialize state from store and local state
   const { slides, isLoading, deleteSlide, setSlides } = useSlideStore();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -59,14 +46,10 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
   const [isInitialized, setIsInitialized] = useState(false);
   const [targetIndex, setTargetIndex] = useState<number | null>(null);
 
-  // Determine if user has editor privileges
   const isEditor = userRole === "EDITOR";
-
-  // Track modal states
   const isModalOpen =
     isAddModalOpen || isEditModalOpen || isDeleteModalOpen || isDeleting;
 
-  // Initialize slides from props
   useEffect(() => {
     if (!isInitialized && initialSlides?.length > 0) {
       setSlides(initialSlides);
@@ -74,7 +57,6 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
     }
   }, [initialSlides, setSlides, isInitialized]);
 
-  // Navigation handlers
   const nextSlide = useCallback(() => {
     const totalSlides = Math.max(slides.length, EMPTY_SLOTS);
     setCurrentSlide((current) => (current + 1) % totalSlides);
@@ -82,33 +64,32 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
 
   const prevSlide = useCallback(() => {
     const totalSlides = Math.max(slides.length, EMPTY_SLOTS);
-    setCurrentSlide((current) => (current - 1 + totalSlides) % totalSlides);
+    setCurrentSlide((current) =>
+      current === 0 ? totalSlides - 1 : current - 1,
+    );
   }, [slides.length]);
 
-  // Autoplay functionality
   useEffect(() => {
     if (!autoPlay || isLoading || isModalOpen) return;
     const timer = setInterval(nextSlide, interval);
     return () => clearInterval(timer);
   }, [autoPlay, interval, nextSlide, isLoading, isModalOpen]);
 
-  // Modal and slide management handlers
   const handleSuccess = useCallback(() => {
-    // Store handles state updates automatically
+    setIsAddModalOpen(false);
+    setIsEditModalOpen(false);
+    setIsDeleteModalOpen(false);
+    setTargetIndex(null);
   }, []);
 
   const handleAddClick = useCallback((index: number) => {
     setCurrentSlide(index);
     setTargetIndex(index);
-    setIsAddModalOpen(true);
+    setTimeout(() => {
+      setIsAddModalOpen(true);
+    }, 500); // Wait for slide transition to complete
   }, []);
 
-  const handleModalClose = useCallback(() => {
-    setIsAddModalOpen(false);
-    setTargetIndex(null);
-  }, []);
-
-  // Loading state
   if (isLoading && !isEditor) {
     return (
       <div className="relative w-screen h-[300px] bg-gray-100 flex items-center justify-center">
@@ -117,15 +98,13 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
     );
   }
 
-  // Calculate how many slots to display
   const totalSlotsToShow = isEditor
     ? Math.min(Math.max(EMPTY_SLOTS, slides.length), MAX_SLIDES)
     : Math.max(1, slides.length);
 
   return (
     <div className="relative w-screen h-[300px] overflow-hidden bg-gray-100">
-      {/* Editor Controls - Only show Add button if under MAX_SLIDES */}
-      {isEditor && slides[currentSlide] && (
+      {isEditor && (
         <div className="absolute top-4 right-4 z-20 bg-black/50 rounded-lg p-2">
           <div className="flex items-center gap-4">
             {slides.length < MAX_SLIDES && (
@@ -137,74 +116,80 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
                 <Plus className="w-5 h-5 text-white" />
               </button>
             )}
-            <button
-              onClick={() => setIsEditModalOpen(true)}
-              className="hover:text-blue-400 transition-colors"
-              aria-label="Edit current slide"
-            >
-              <Pencil className="w-5 h-5 text-white" />
-            </button>
-            <button
-              onClick={() => setIsDeleteModalOpen(true)}
-              className="hover:text-blue-400 transition-colors"
-              aria-label="Delete current slide"
-              disabled={isDeleting}
-            >
-              <Trash className="w-5 h-5 text-white" />
-            </button>
+            {slides[currentSlide] && (
+              <>
+                <button
+                  onClick={() => setIsEditModalOpen(true)}
+                  className="hover:text-blue-400 transition-colors"
+                  aria-label="Edit current slide"
+                >
+                  <Pencil className="w-5 h-5 text-white" />
+                </button>
+                <button
+                  onClick={() => setIsDeleteModalOpen(true)}
+                  className="hover:text-blue-400 transition-colors"
+                  aria-label="Delete current slide"
+                  disabled={isDeleting}
+                >
+                  <Trash className="w-5 h-5 text-white" />
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
 
-      {/* Slider Track */}
-      <div
-        className={cn(
-          "flex transition-transform duration-500 ease-in-out h-full",
-          translateClasses[currentSlide as keyof typeof translateClasses] ||
-            "translate-x-0",
-        )}
-      >
-        {[...Array(totalSlotsToShow)].map((_, index) => {
-          const slide = slides[index];
-          if (slide) {
+      <div className="w-[400%] h-full flex">
+        <div
+          className={cn(
+            "w-full h-full flex transform transition-transform duration-500 ease-in-out",
+            currentSlide === 0 ? "-translate-x-0" : "",
+            currentSlide === 1 ? "-translate-x-1/4" : "",
+            currentSlide === 2 ? "-translate-x-2/4" : "",
+            currentSlide === 3 ? "-translate-x-3/4" : "",
+          )}
+        >
+          {[...Array(totalSlotsToShow)].map((_, index) => {
+            const slide = slides[index];
             return (
               <div
-                key={slide.id}
-                className="flex-none w-full h-full flex flex-col items-center justify-center text-white relative"
+                key={slide ? slide.id : `empty-${index}`}
+                className="w-1/4 flex-shrink-0 h-full"
               >
-                {slide.sliderImageurl && (
-                  <Image
-                    src={slide.sliderImageurl}
-                    alt={slide.title}
-                    fill
-                    priority
-                    className="object-cover"
-                    sizes="100vw"
-                  />
-                )}
-                <div className="relative z-10">
-                  <h2 className="text-4xl font-bold mb-4">{slide.title}</h2>
-                  <p className="text-xl">{slide.description}</p>
-                </div>
+                {slide ? (
+                  <div className="relative w-full h-full flex flex-col items-center justify-center text-white">
+                    {slide.sliderImageurl && (
+                      <Image
+                        src={slide.sliderImageurl}
+                        alt={slide.title}
+                        fill
+                        priority
+                        className="object-cover"
+                        sizes="100vw"
+                      />
+                    )}
+                    <div className="relative z-10">
+                      <h2 className="text-4xl font-bold mb-4">{slide.title}</h2>
+                      <p className="text-xl">{slide.description}</p>
+                    </div>
+                  </div>
+                ) : isEditor && slides.length < MAX_SLIDES ? (
+                  <div
+                    className="w-full h-full flex flex-col items-center justify-center border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+                    onClick={() => handleAddClick(index)}
+                  >
+                    <Plus className="w-12 h-12 text-gray-400 mb-2" />
+                    <p className="text-xl text-gray-500">
+                      Add Slide {index + 1}
+                    </p>
+                  </div>
+                ) : null}
               </div>
             );
-          } else if (isEditor && slides.length < MAX_SLIDES) {
-            return (
-              <div
-                key={`empty-${index}`}
-                className="flex-none w-full h-full flex flex-col items-center justify-center border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
-                onClick={() => handleAddClick(index)}
-              >
-                <Plus className="w-12 h-12 text-gray-400 mb-2" />
-                <p className="text-xl text-gray-500">Add Slide {index + 1}</p>
-              </div>
-            );
-          }
-          return null;
-        })}
+          })}
+        </div>
       </div>
 
-      {/* Navigation Arrows */}
       {!isModalOpen && (
         <>
           <button
@@ -224,7 +209,6 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
         </>
       )}
 
-      {/* Dots Navigation */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2 z-10">
         {[...Array(totalSlotsToShow)].map((_, index) => (
           <button
@@ -244,10 +228,9 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
         ))}
       </div>
 
-      {/* Modals */}
       <AddSlideModal
         isOpen={isAddModalOpen}
-        onClose={handleModalClose}
+        onClose={() => setIsAddModalOpen(false)}
         onSuccess={handleSuccess}
         targetIndex={targetIndex !== null ? targetIndex : 0}
       />
@@ -261,7 +244,6 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
         />
       )}
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
         <DialogContent>
           <DialogHeader>
