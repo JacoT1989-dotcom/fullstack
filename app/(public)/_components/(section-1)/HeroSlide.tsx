@@ -252,7 +252,7 @@ const HeroSlider: React.FC<HeroSliderProps> = ({
         targetIndex={targetIndex !== null ? targetIndex : 0}
       />
 
-      {slides[currentSlide] && (
+      {isEditModalOpen && slides[currentSlide] && (
         <EditSlideModal
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}

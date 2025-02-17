@@ -32,6 +32,7 @@ import { toast } from "sonner";
 import { type Slide } from "./types";
 import { createSlideSchema } from "./validations";
 import { useSlideStore } from "./_crud-actions/_store/use-slide-store";
+import Image from "next/image";
 
 interface EditSlideModalProps {
   isOpen: boolean;
@@ -115,6 +116,16 @@ const EditSlideModal: React.FC<EditSlideModalProps> = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Slide Image</FormLabel>
+                  {slide.sliderImageurl && (
+                    <div className="relative w-full h-40 mb-4 rounded-lg overflow-hidden">
+                      <Image
+                        src={slide.sliderImageurl}
+                        alt="Current slide"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  )}
                   <FormControl>
                     <Input
                       type="file"
