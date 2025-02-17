@@ -28,7 +28,7 @@ export default async function Home() {
       </div>
 
       {/* Product Tabs Section */}
-      <div className="mt-24">
+      <div className="mt-4">
         <ProductTabs />
       </div>
     </main>
