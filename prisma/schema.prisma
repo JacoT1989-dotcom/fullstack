@@ -80,11 +80,11 @@ model Slide {
   description    String
   bgColor        String
   order          Int // Added to maintain slide order
+  userId         String
+  user           User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  User      User?    @relation(fields: [userId], references: [id])
-  userId    String?
 
   @@map("slides")
 }
