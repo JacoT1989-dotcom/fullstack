@@ -30,9 +30,21 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 import { type Slide } from "./types";
-import { createSlideSchema } from "./validations";
+import { z } from "zod";
 import { useSlideStore } from "./_crud-actions/_store/use-slide-store";
 import Image from "next/image";
+
+// Modified schema to handle existing images
+const editSlideSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().min(1, "Description is required"),
+  bgColor: z.string().min(1, "Background color is required"),
+  order: z.number().min(1, "Order must be at least 1"),
+  sliderImage: z.any().optional(), // Make the image field optional for editing
+  currentImageUrl: z.string().optional(), // Add field for tracking current image
+});
+
+type EditSlideFormValues = z.infer<typeof editSlideSchema>;
 
 interface EditSlideModalProps {
   isOpen: boolean;
@@ -57,23 +69,25 @@ const EditSlideModal: React.FC<EditSlideModalProps> = ({
   const [loading, setLoading] = useState(false);
   const { updateSlide } = useSlideStore();
 
-  const form = useForm({
-    resolver: zodResolver(createSlideSchema),
+  const form = useForm<EditSlideFormValues>({
+    resolver: zodResolver(editSlideSchema),
     defaultValues: {
       title: slide.title,
       description: slide.description,
       bgColor: slide.bgColor,
       order: slide.order,
+      currentImageUrl: slide.sliderImageurl, // Initialize with current image URL
       sliderImage: undefined,
     },
   });
 
-  async function onSubmit(data: any) {
+  async function onSubmit(data: EditSlideFormValues) {
     try {
       setLoading(true);
       const formData = new FormData();
 
-      if (data.sliderImage) {
+      // Only append new image if one was selected
+      if (data.sliderImage instanceof File) {
         formData.append("sliderImage", data.sliderImage);
       }
 
@@ -113,7 +127,7 @@ const EditSlideModal: React.FC<EditSlideModalProps> = ({
             <FormField
               control={form.control}
               name="sliderImage"
-              render={({ field }) => (
+              render={({ field: { onChange, value, ...field } }) => (
                 <FormItem>
                   <FormLabel>Slide Image</FormLabel>
                   {slide.sliderImageurl && (
@@ -130,7 +144,11 @@ const EditSlideModal: React.FC<EditSlideModalProps> = ({
                     <Input
                       type="file"
                       accept="image/*"
-                      onChange={(e) => field.onChange(e.target.files?.[0])}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        onChange(file); // Update form field
+                      }}
+                      {...field}
                     />
                   </FormControl>
                   <FormDescription>
