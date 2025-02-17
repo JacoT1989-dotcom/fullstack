@@ -1,9 +1,23 @@
-export interface ProductCardProps {
+// types.ts
+export interface BaseProductProps {
   name: string;
-  price: string;
   rating: number;
-  image?: string; // Optional URL for the product image
+  image?: string;
 }
+
+export interface RegularProductProps extends BaseProductProps {
+  price: string;
+  originalPrice?: never;
+  salePrice?: never;
+}
+
+export interface SaleProductProps extends BaseProductProps {
+  originalPrice: string;
+  salePrice: string;
+  price?: never;
+}
+
+export type ProductCardProps = RegularProductProps | SaleProductProps;
 
 export interface ProductSlideProps {
   products: ProductCardProps[];
