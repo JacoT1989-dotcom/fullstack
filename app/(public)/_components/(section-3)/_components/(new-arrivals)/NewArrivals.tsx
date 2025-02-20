@@ -2,6 +2,7 @@
 import { useMemo, useEffect } from "react";
 import useNewArrivalsStore from "../../_store/(new-store)/new-arrival-store";
 import { ProductCardProps } from "../../types";
+import { useSession } from "@/app/SessionProvider";
 
 const SLOTS_PER_PAGE = {
   mobile: 2,
@@ -10,6 +11,8 @@ const SLOTS_PER_PAGE = {
 
 export const useNewArrivalsContent = () => {
   const { newArrivals, fetchNewArrivals } = useNewArrivalsStore();
+  const { user } = useSession();
+  const isEditor = user?.role === "EDITOR";
 
   // Fetch data on mount
   useEffect(() => {
@@ -39,11 +42,16 @@ export const useNewArrivalsContent = () => {
       desktopPages.push(convertedArrivals.slice(i, i + SLOTS_PER_PAGE.desktop));
     }
 
-    // Add empty slots if needed
+    // Add empty slots if needed (only for editors)
     const addEmptySlots = (
       pages: ProductCardProps[][],
       slotsPerPage: number,
     ) => {
+      // If not an editor, return pages as is
+      if (!isEditor) {
+        return pages.length > 0 ? pages : [[]];
+      }
+
       if (pages.length === 0) {
         // If no items, create a page with all empty slots
         return [Array(slotsPerPage).fill({ isEmpty: true })];
@@ -70,5 +78,5 @@ export const useNewArrivalsContent = () => {
       mobile: addEmptySlots(mobilePages, SLOTS_PER_PAGE.mobile),
       desktop: addEmptySlots(desktopPages, SLOTS_PER_PAGE.desktop),
     };
-  }, [newArrivals]);
+  }, [newArrivals, isEditor]);
 };
