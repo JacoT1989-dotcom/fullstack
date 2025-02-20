@@ -22,6 +22,8 @@ export type ProductCardProps = RegularProductProps | SaleProductProps;
 export interface ProductSlideProps {
   products: ProductCardProps[];
   isMobile: boolean;
+  activeTab: number;
+  tabName: string;
 }
 
 export type TabContent = {

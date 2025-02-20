@@ -1,18 +1,25 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { BestSellersContent } from "./_components/BestSellers";
-import { OnSaleContent } from "./_components/OnSale";
+import { useBestSellersContent } from "./_components/(best-seller)/BestSellers";
+import { OnSaleContent } from "./_components/(on-sale)/OnSale";
 import { ProductSlide } from "./_components/ProductSlide";
 import { useNewArrivalsContent } from "./_components/(new-arrivals)/NewArrivals";
+import { ProductCardProps } from "./types";
+
+type Viewport = "mobile" | "desktop";
+
+type ViewportContent = {
+  [key in Viewport]: ProductCardProps[][];
+};
 
 const ProductTabs: React.FC = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [activeSlide, setActiveSlide] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Call the hook once at the component level
-  const newArrivalsContent = useNewArrivalsContent();
+  const newArrivalsContent = useNewArrivalsContent() as ViewportContent;
+  const bestSellersContent = useBestSellersContent() as ViewportContent;
 
   useEffect(() => {
     const checkMobile = () => {
@@ -30,22 +37,23 @@ const ProductTabs: React.FC = () => {
     { name: "On Sale", id: 2 },
   ];
 
-  const getContent = (tabId: number) => {
-    const viewport = isMobile ? "mobile" : "desktop";
+  const getContent = (tabId: number): ProductCardProps[][] => {
+    const viewport: Viewport = isMobile ? "mobile" : "desktop";
 
     switch (tabId) {
       case 0:
-        return newArrivalsContent[viewport];
+        return newArrivalsContent[viewport] || [[]];
       case 1:
-        return BestSellersContent[viewport];
+        return bestSellersContent[viewport] || [[]];
       case 2:
-        return OnSaleContent[viewport];
+        return (OnSaleContent[viewport] as ProductCardProps[][]) || [[]];
       default:
-        return [];
+        return [[]];
     }
   };
 
   const currentContent = getContent(activeTab);
+  const currentSlideContent = currentContent[activeSlide] || [];
   const maxSlides = currentContent.length;
 
   const handleNextSlide = () => {
@@ -59,11 +67,18 @@ const ProductTabs: React.FC = () => {
   const renderSlide = () => {
     return (
       <ProductSlide
-        products={currentContent[activeSlide]}
+        products={currentSlideContent}
         isMobile={isMobile}
+        activeTab={activeTab} // Pass activeTab to ProductSlide
+        tabName={tabs[activeTab].name} // Pass tab name for context
       />
     );
   };
+
+  // Reset active slide when switching tabs
+  useEffect(() => {
+    setActiveSlide(0);
+  }, [activeTab]);
 
   return (
     <div className="w-full py-16 bg-background">

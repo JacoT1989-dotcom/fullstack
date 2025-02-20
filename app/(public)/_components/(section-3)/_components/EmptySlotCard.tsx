@@ -1,12 +1,16 @@
-// _components/(new-arrivals)/EmptySlotCard.tsx
+// EmptySlotCard.tsx
 import React from "react";
 import { Plus } from "lucide-react";
 
 interface EmptySlotCardProps {
   onAdd: () => void;
+  tabName: string;
 }
 
-export const EmptySlotCard: React.FC<EmptySlotCardProps> = ({ onAdd }) => {
+export const EmptySlotCard: React.FC<EmptySlotCardProps> = ({
+  onAdd,
+  tabName,
+}) => {
   return (
     <div
       onClick={onAdd}
@@ -22,7 +26,7 @@ export const EmptySlotCard: React.FC<EmptySlotCardProps> = ({ onAdd }) => {
         className="text-sm text-muted-foreground group-hover:text-primary 
                       transition-colors font-medium"
       >
-        Add New Arrival
+        {`Add ${tabName}`}
       </span>
     </div>
   );
