@@ -10,7 +10,7 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
     if ("price" in props) {
       return (
         <span className="text-lg font-semibold text-primary">
-          ${props.price}
+          R{props.price}
         </span>
       );
     } else {
