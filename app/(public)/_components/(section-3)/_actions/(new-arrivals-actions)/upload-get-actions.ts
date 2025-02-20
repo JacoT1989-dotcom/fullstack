@@ -33,7 +33,7 @@ export async function createNewArrival(
     const { user } = await validateRequest();
     if (!user) throw new Error("Unauthorized access");
     if (user.role !== "EDITOR") {
-      return redirect("/login");
+      return redirect("/");
     }
 
     // Get form data

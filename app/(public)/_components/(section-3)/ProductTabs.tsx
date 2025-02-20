@@ -1,15 +1,18 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { NewArrivalsContent } from "./_components/NewArrivals";
 import { BestSellersContent } from "./_components/BestSellers";
 import { OnSaleContent } from "./_components/OnSale";
 import { ProductSlide } from "./_components/ProductSlide";
+import { useNewArrivalsContent } from "./_components/(new-arrivals)/NewArrivals";
 
 const ProductTabs: React.FC = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [activeSlide, setActiveSlide] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Call the hook once at the component level
+  const newArrivalsContent = useNewArrivalsContent();
 
   useEffect(() => {
     const checkMobile = () => {
@@ -28,13 +31,15 @@ const ProductTabs: React.FC = () => {
   ];
 
   const getContent = (tabId: number) => {
+    const viewport = isMobile ? "mobile" : "desktop";
+
     switch (tabId) {
       case 0:
-        return NewArrivalsContent[isMobile ? "mobile" : "desktop"];
+        return newArrivalsContent[viewport];
       case 1:
-        return BestSellersContent[isMobile ? "mobile" : "desktop"];
+        return BestSellersContent[viewport];
       case 2:
-        return OnSaleContent[isMobile ? "mobile" : "desktop"];
+        return OnSaleContent[viewport];
       default:
         return [];
     }
