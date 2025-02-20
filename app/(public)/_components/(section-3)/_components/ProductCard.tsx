@@ -17,10 +17,10 @@ const ProductCard: React.FC<ProductCardProps> = (props) => {
       return (
         <div className="flex items-center space-x-2">
           <span className="text-lg font-semibold text-red-600">
-            ${props.salePrice}
+            R{props.salePrice}
           </span>
           <span className="text-sm text-muted-foreground line-through">
-            ${props.originalPrice}
+            R{props.originalPrice}
           </span>
         </div>
       );
