@@ -5,6 +5,7 @@ import { UploadModal } from "./(new-arrivals)/UploadModal";
 import { BestSellerUploadModal } from "./(best-seller)/BestSellerUploadModal";
 import { EmptySlotCard } from "./EmptySlotCard";
 import { ProductSlideProps } from "../types";
+import { OnSaleUploadModal } from "./(on-sale)/OnSaleModal";
 
 export const ProductSlide: React.FC<ProductSlideProps> = ({
   products,
@@ -37,8 +38,12 @@ export const ProductSlide: React.FC<ProductSlideProps> = ({
           />
         );
       case 2:
-        // Add OnSaleUploadModal when implemented
-        return null;
+        return (
+          <OnSaleUploadModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+          />
+        );
       default:
         return null;
     }

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useBestSellersContent } from "./_components/(best-seller)/BestSellers";
-import { OnSaleContent } from "./_components/(on-sale)/OnSale";
+import { useOnSaleContent } from "./_components/(on-sale)/OnSale";
 import { ProductSlide } from "./_components/ProductSlide";
 import { useNewArrivalsContent } from "./_components/(new-arrivals)/NewArrivals";
 import { ProductCardProps } from "./types";
@@ -20,6 +20,7 @@ const ProductTabs: React.FC = () => {
 
   const newArrivalsContent = useNewArrivalsContent() as ViewportContent;
   const bestSellersContent = useBestSellersContent() as ViewportContent;
+  const onSaleContent = useOnSaleContent() as ViewportContent;
 
   useEffect(() => {
     const checkMobile = () => {
@@ -46,7 +47,7 @@ const ProductTabs: React.FC = () => {
       case 1:
         return bestSellersContent[viewport] || [[]];
       case 2:
-        return (OnSaleContent[viewport] as ProductCardProps[][]) || [[]];
+        return onSaleContent[viewport] || [[]];
       default:
         return [[]];
     }
@@ -69,8 +70,8 @@ const ProductTabs: React.FC = () => {
       <ProductSlide
         products={currentSlideContent}
         isMobile={isMobile}
-        activeTab={activeTab} // Pass activeTab to ProductSlide
-        tabName={tabs[activeTab].name} // Pass tab name for context
+        activeTab={activeTab}
+        tabName={tabs[activeTab].name}
       />
     );
   };
