@@ -9,29 +9,30 @@ datasource db {
 }
 
 model User {
-  id            String       @id @default(uuid())
-  username      String       @unique
-  firstName     String
-  lastName      String
-  displayName   String
-  email         String       @unique
-  passwordHash  String
-  phoneNumber   String       @default("")
-  streetAddress String
-  suburb        String?
-  townCity      String
-  postcode      String
-  country       String
-  avatarUrl     String?
-  backgroundUrl String?
-  agreeTerms    Boolean      @default(false)
-  role          UserRole     @default(USER)
-  Session       Session[]
-  Product       Product[]
-  Slide         Slide[]
-  NewArrival    NewArrival[]
-  BestSeller    BestSeller[]
-  OnSale        OnSale[]
+  id                     String                   @id @default(uuid())
+  username               String                   @unique
+  firstName              String
+  lastName               String
+  displayName            String
+  email                  String                   @unique
+  passwordHash           String
+  phoneNumber            String                   @default("")
+  streetAddress          String
+  suburb                 String?
+  townCity               String
+  postcode               String
+  country                String
+  avatarUrl              String?
+  backgroundUrl          String?
+  agreeTerms             Boolean                  @default(false)
+  role                   UserRole                 @default(USER)
+  Session                Session[]
+  Product                Product[]
+  Slide                  Slide[]
+  NewArrival             NewArrival[]
+  BestSeller             BestSeller[]
+  OnSale                 OnSale[]
+  NewsletterSubscription NewsletterSubscription[]
 
   @@map("users")
 }
@@ -67,10 +68,41 @@ model Product {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Variation Variation[]
 
   @@map("products")
+}
+
+model Variation {
+  id String @id @default(uuid())
+
+  name     String // Name of the variation
+  color    String // Color of the variation
+  size     String // Size of the variation
+  sku      String // Stock Keeping Unit
+  quantity Int // Available quantity
+  price    Float // Price specific to this variation
+  imageUrl String // Image URL for this variation
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("variations")
+}
+
+enum StockStatus {
+  IN_STOCK
+  LOW_STOCK
+  OUT_OF_STOCK
+}
+
+enum Gender {
+  MEN
+  WOMEN
+  UNISEX
+  KIDS
 }
 
 model Slide {
@@ -130,4 +162,26 @@ model OnSale {
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("on_sale")
+}
+
+model NewsletterSubscription {
+  id                  String             @id @default(uuid())
+  email               String             @unique
+  status              SubscriptionStatus @default(ACTIVE)
+  firstName           String?
+  lastName            String?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  userId              String?
+  user                User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  wantsProductUpdates Boolean            @default(true)
+  wantsPromotions     Boolean            @default(true)
+  wantsNewsletter     Boolean            @default(true)
+
+  @@map("newsletter_subscriptions")
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  UNSUBSCRIBED
 }
