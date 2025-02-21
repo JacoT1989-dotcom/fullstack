@@ -1,8 +1,8 @@
-// _components/Footer.tsx
+// components/Footer.tsx
 import React from "react";
 import Link from "next/link";
-import { Mail } from "lucide-react";
 import { FaFacebookF, FaInstagram, FaXTwitter } from "react-icons/fa6";
+import EmailSubscribe from "./EmailSubscribe";
 
 const Footer: React.FC = () => {
   return (
@@ -26,19 +26,7 @@ const Footer: React.FC = () => {
                 </p>
               </div>
 
-              <div className="space-y-4">
-                <h3 className="font-medium text-sm text-white">Stay updated</h3>
-                <div className="flex gap-2 max-w-md">
-                  <input
-                    type="email"
-                    placeholder="Enter your email"
-                    className="flex-1 rounded-md border border-gray-700 bg-gray-800 px-4 py-2 text-sm text-white placeholder:text-gray-400"
-                  />
-                  <button className="bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white rounded-md px-6 py-2 text-sm font-medium transition-all duration-300">
-                    Subscribe
-                  </button>
-                </div>
-              </div>
+              <EmailSubscribe />
             </div>
 
             {/* Hours & Contact */}
