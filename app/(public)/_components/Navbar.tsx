@@ -42,8 +42,8 @@ export default function Navbar() {
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? "bg-gradient-to-b from-gray-900 to-black shadow-lg border-b border-red-700"
+        scrolled 
+          ? "bg-gradient-to-b from-gray-900 to-black shadow-lg border-b border-red-700" 
           : "bg-gradient-to-b from-gray-900 to-black"
       }`}
     >
@@ -54,7 +54,7 @@ export default function Navbar() {
             alt="Genius Humans Logo"
             width={250}
             height={45}
-            className="object-contain brightness-200"
+            className="object-contain"
           />
         </Link>
 
@@ -73,7 +73,7 @@ export default function Navbar() {
           ))}
 
           {/* Auth Button */}
-          <div className="ml-2">
+          <div className="ml-2 text-gray-300">
             {!user && <AuthModal />}
             {user && <UserButton />}
           </div>
@@ -81,12 +81,15 @@ export default function Navbar() {
 
         {/* Mobile Navigation */}
         <div className="md:hidden flex items-center gap-2">
-          {!user && <AuthModal />}
-          {user && <UserButton />}
+          <div className="text-gray-300">
+            {!user && <AuthModal />}
+            {user && <UserButton />}
+          </div>
+          
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
-              <Button
-                variant="ghost"
+              <Button 
+                variant="ghost" 
                 size="icon"
                 className="text-gray-300 hover:text-white hover:bg-red-600/20"
               >
@@ -94,8 +97,8 @@ export default function Navbar() {
                 <span className="sr-only">Toggle menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent
-              side="right"
+            <SheetContent 
+              side="right" 
               className="w-[300px] sm:w-[400px] bg-gradient-to-b from-gray-900 to-black border-l border-red-700"
             >
               <SheetHeader>
