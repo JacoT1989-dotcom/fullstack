@@ -1,5 +1,3 @@
-// app/product/[productId]/page.tsx
-
 import { getProductById } from "./actions";
 import ProductDetails from "./ProductDetails";
 
@@ -12,7 +10,7 @@ interface ProductDetailsPageProps {
 const ProductDetailsPage = async ({ params }: ProductDetailsPageProps) => {
   const result = await getProductById(params.productId);
 
-  if (!result.success || !result.products?.[0]) {
+  if (!result.success || !result.product) {
     return (
       <div className="mt-20 container mx-auto px-4 text-center">
         <h1 className="text-2xl text-red-600">
@@ -24,7 +22,7 @@ const ProductDetailsPage = async ({ params }: ProductDetailsPageProps) => {
 
   return (
     <div className="mt-20">
-      <ProductDetails product={result.products[0]} />
+      <ProductDetails product={result.product} />
     </div>
   );
 };

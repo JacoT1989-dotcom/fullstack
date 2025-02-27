@@ -1,12 +1,22 @@
-// components/ProductDetails.tsx
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { ShoppingCart, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency } from "../utils";
+
+interface Variation {
+  id: string;
+  name: string;
+  color: string;
+  size: string;
+  sku: string;
+  quantity: number;
+  price: number;
+  imageUrl: string;
+}
 
 interface Product {
   id: string;
@@ -15,6 +25,7 @@ interface Product {
   productImgUrl: string;
   description: string;
   sellingPrice: number;
+  variations: Variation[];
 }
 
 interface ProductDetailsProps {
@@ -22,10 +33,60 @@ interface ProductDetailsProps {
 }
 
 const ProductDetails = ({ product }: ProductDetailsProps) => {
-  const handleAddToCart = () => {
-    console.log("Adding to cart:", product.id);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [quantity, setQuantity] = useState<number>(1);
+
+  // Filter variations based on selected color and size
+  const filteredVariations = product.variations.filter(
+    (variation) =>
+      (!selectedColor || variation.color === selectedColor) &&
+      (!selectedSize || variation.size === selectedSize),
+  );
+
+  // Get unique colors and sizes
+  const uniqueColors = [
+    ...new Set(product.variations.map((variation) => variation.color)),
+  ];
+  const uniqueSizes = [
+    ...new Set(product.variations.map((variation) => variation.size)),
+  ];
+
+  // Get the selected variation
+  const selectedVariation = filteredVariations[0];
+
+  // Handle color selection
+  const handleColorSelect = (color: string) => {
+    setSelectedColor(color);
+    setSelectedSize(null); // Reset size when color changes
   };
 
+  // Handle size selection
+  const handleSizeSelect = (size: string) => {
+    setSelectedSize(size);
+  };
+
+  // Handle quantity change
+  const handleQuantityChange = (value: number) => {
+    if (value > 0 && selectedVariation && value <= selectedVariation.quantity) {
+      setQuantity(value);
+    }
+  };
+
+  // Handle add to cart
+  const handleAddToCart = () => {
+    if (!selectedVariation) {
+      alert("Please select a color and size.");
+      return;
+    }
+    console.log("Adding to cart:", {
+      productId: product.id,
+      variationId: selectedVariation.id,
+      quantity,
+    });
+  };
+
+  // Handle view cart
   const handleViewCart = () => {
     console.log("Viewing cart");
   };
@@ -38,7 +99,7 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
             {/* Product Image */}
             <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-100">
               <Image
-                src={product.productImgUrl}
+                src={selectedVariation?.imageUrl || product.productImgUrl}
                 alt={product.productName}
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"
@@ -61,10 +122,83 @@ const ProductDetails = ({ product }: ProductDetailsProps) => {
 
                 <div className="mb-6">
                   <p className="text-lg font-bold text-primary">
-                    {formatCurrency(product.sellingPrice)}
+                    {formatCurrency(
+                      selectedVariation?.price || product.sellingPrice,
+                    )}
                   </p>
                 </div>
 
+                {/* Color Selection */}
+                <div className="mb-4">
+                  <h2 className="text-lg font-semibold mb-2">Color</h2>
+                  <div className="flex gap-2">
+                    {uniqueColors.map((color) => (
+                      <button
+                        key={color}
+                        onClick={() => handleColorSelect(color)}
+                        className={`p-2 border rounded ${
+                          selectedColor === color
+                            ? "border-blue-600"
+                            : "border-gray-300"
+                        }`}
+                      >
+                        {color}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Size Selection */}
+                <div className="mb-4">
+                  <h2 className="text-lg font-semibold mb-2">Size</h2>
+                  <div className="flex gap-2">
+                    {uniqueSizes.map((size) => (
+                      <button
+                        key={size}
+                        onClick={() => handleSizeSelect(size)}
+                        className={`p-2 border rounded ${
+                          selectedSize === size
+                            ? "border-blue-600"
+                            : "border-gray-300"
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Quantity Selector */}
+                <div className="mb-6">
+                  <h2 className="text-lg font-semibold mb-2">Quantity</h2>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleQuantityChange(quantity - 1)}
+                      disabled={quantity <= 1}
+                      className="p-2 border rounded"
+                    >
+                      -
+                    </button>
+                    <span>{quantity}</span>
+                    <button
+                      onClick={() => handleQuantityChange(quantity + 1)}
+                      disabled={
+                        !selectedVariation ||
+                        quantity >= selectedVariation.quantity
+                      }
+                      className="p-2 border rounded"
+                    >
+                      +
+                    </button>
+                  </div>
+                  {selectedVariation && (
+                    <p className="text-sm text-gray-500 mt-2">
+                      {selectedVariation.quantity} available
+                    </p>
+                  )}
+                </div>
+
+                {/* Description */}
                 <div className="mb-6">
                   <h2 className="text-lg font-semibold mb-2">Description</h2>
                   <p className="text-gray-600">{product.description}</p>
