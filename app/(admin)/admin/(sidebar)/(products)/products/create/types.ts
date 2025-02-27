@@ -13,6 +13,17 @@ export const ALLOWED_IMAGE_TYPES = [
 
 export const MAX_IMAGE_SIZE = 6 * 1024 * 1024; // 6mb
 
+export interface Variation {
+  id: string;
+  name: string;
+  color: string;
+  size: string;
+  sku: string;
+  quantity: number;
+  price: number;
+  imageUrl: string;
+}
+
 export interface Product {
   id: string;
   productName: string;
@@ -21,10 +32,17 @@ export interface Product {
   description: string;
   sellingPrice: number;
   isPublished: boolean;
+  variations?: Variation[];
 }
 
 export interface ProductActionResult {
   success: boolean;
   product?: Product;
+  error?: string;
+}
+
+export interface VariationActionResult {
+  success: boolean;
+  variation?: Variation;
   error?: string;
 }

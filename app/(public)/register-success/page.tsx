@@ -49,7 +49,7 @@ const RegisterSuccess = () => {
 
             <div className="flex flex-col gap-2">
               <Button
-                onClick={() => router.push("/login")}
+                onClick={() => router.push("/")}
                 className="w-full bg-primary hover:bg-primary/90"
               >
                 Go to Login

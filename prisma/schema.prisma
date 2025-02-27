@@ -55,6 +55,7 @@ enum UserRole {
   SUPERADMIN
 }
 
+// ADMIN
 model Product {
   id String @id @default(uuid())
 
@@ -105,6 +106,7 @@ enum Gender {
   KIDS
 }
 
+// EDITOR
 model Slide {
   id             String @id @default(uuid())
   sliderImageurl String
