@@ -116,8 +116,6 @@ export const ProductCard = ({
     setImageLoadError(true);
   };
 
-  const fallbackImageUrl = "/path/to/fallback-image.png";
-
   return (
     <Card className="h-full flex flex-col hover:shadow-lg transition-shadow">
       <CardHeader className="p-0">
@@ -125,7 +123,7 @@ export const ProductCard = ({
           {!imageLoadError ? (
             // Use simpler Next.js Image with explicit width/height and quality
             <Image
-              src={imageLoadError ? fallbackImageUrl : productImgUrl}
+              src={productImgUrl}
               alt={productName}
               width={300}
               height={300}
