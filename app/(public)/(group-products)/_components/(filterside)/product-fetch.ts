@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { ProductActionResult } from "./types";
+import { error } from "console";
 
 /**
  * Fetches all products from the database with their variations,
@@ -9,8 +10,6 @@ import { ProductActionResult } from "./types";
  */
 export async function getAllProducts(): Promise<ProductActionResult> {
   try {
-    console.log("Server: Fetching all products across all categories");
-
     const products = await prisma.product.findMany({
       where: {
         isPublished: true,
@@ -44,10 +43,6 @@ export async function getAllProducts(): Promise<ProductActionResult> {
       },
     });
 
-    console.log(
-      `Server: Found ${products.length} products across all categories`,
-    );
-
     // Log category distribution for debugging
     const categoryDistribution = products.reduce<Record<string, number>>(
       (acc, product) => {
@@ -61,8 +56,6 @@ export async function getAllProducts(): Promise<ProductActionResult> {
       {},
     );
 
-    console.log("Server: Category distribution:", categoryDistribution);
-
     // Transform the data to match frontend expectations
     const transformedProducts = products.map((product) => {
       // Create a copy without Variation to avoid property name conflicts
@@ -74,8 +67,6 @@ export async function getAllProducts(): Promise<ProductActionResult> {
         variations: Variation,
       };
     });
-
-    console.log("Server: Products transformed successfully");
 
     return {
       success: true,
