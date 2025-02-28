@@ -18,7 +18,7 @@ import AuthModal from "@/app/(auth)/_components/AuthTabs";
 
 const getRoutes = (isAuthenticated: boolean) => [
   { name: "Home", path: "/" },
-  { name: "Headwear", path: "/all-in-headwear" },
+  { name: "Headwear", path: "/headwear" },
   { name: "Apparel", path: "/apparel" },
   { name: "All Collections", path: "/all-collections" },
 ];
@@ -42,8 +42,8 @@ export default function Navbar() {
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled 
-          ? "bg-gradient-to-b from-gray-900 to-black shadow-lg border-b border-red-700" 
+        scrolled
+          ? "bg-gradient-to-b from-gray-900 to-black shadow-lg border-b border-red-700"
           : "bg-gradient-to-b from-gray-900 to-black"
       }`}
     >
@@ -85,11 +85,11 @@ export default function Navbar() {
             {!user && <AuthModal />}
             {user && <UserButton />}
           </div>
-          
+
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 size="icon"
                 className="text-gray-300 hover:text-white hover:bg-red-600/20"
               >
@@ -97,8 +97,8 @@ export default function Navbar() {
                 <span className="sr-only">Toggle menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent 
-              side="right" 
+            <SheetContent
+              side="right"
               className="w-[300px] sm:w-[400px] bg-gradient-to-b from-gray-900 to-black border-l border-red-700"
             >
               <SheetHeader>

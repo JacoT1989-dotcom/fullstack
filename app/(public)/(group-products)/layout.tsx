@@ -1,6 +1,6 @@
 // app/(public)/(group-products)/layout.tsx
 
-import FilterSidebar from "./_components/FilterSidebar";
+import FilterSidebar from "./_components/(filterside)/FilterSidebar";
 
 export default function ProductsLayout({
   children,

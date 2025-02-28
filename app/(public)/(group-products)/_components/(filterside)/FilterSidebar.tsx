@@ -1,5 +1,6 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { ChevronDown, ChevronUp, SlidersHorizontal, X } from "lucide-react";
 
 interface SelectedFilters {
@@ -7,23 +8,60 @@ interface SelectedFilters {
 }
 
 const FilterSidebar = () => {
+  const pathname = usePathname();
+  const router = useRouter();
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  // Add category to our filters
   const [selectedFilters, setSelectedFilters] = useState<SelectedFilters>({
+    Category: [],
     "Stock Level": [],
     Color: [],
     "Price Range": [],
-    Material: [],
-    Gender: [],
   });
 
+  // Define available categories with useMemo to prevent recreation on each render
+  const categories = useMemo(
+    () => [
+      { name: "Apparel", value: "apparel" },
+      { name: "Headwear", value: "headwear" },
+      { name: "All Collections", value: "all-collections" },
+    ],
+    [],
+  );
+
+  // Other filters remain the same
   const filters = {
+    Category: categories.map((cat) => cat.name),
     "Stock Level": ["In Stock", "Out of Stock", "Low Stock"],
     Color: ["Black", "White", "Red", "Blue", "Green"],
     "Price Range": ["Under $50", "$50-$100", "$100-$200", "Over $200"],
-    Material: ["Cotton", "Polyester", "Wool", "Leather", "Denim"],
-    Gender: ["Men", "Women", "Unisex"],
   };
+
+  // Set initial category based on pathname when component mounts
+  useEffect(() => {
+    if (pathname) {
+      const pathSegments = pathname.split("/").filter(Boolean);
+      const lastSegment = pathSegments[pathSegments.length - 1];
+
+      // Find if this segment corresponds to one of our categories
+      const matchedCategory = categories.find(
+        (cat) => lastSegment.toLowerCase() === cat.value,
+      );
+
+      if (matchedCategory) {
+        // Update selected filters with this category
+        setSelectedFilters((prev) => ({
+          ...prev,
+          Category: [matchedCategory.name],
+        }));
+
+        // Open the category dropdown by default
+        setOpenDropdown("Category");
+      }
+    }
+  }, [pathname, categories]);
 
   const toggleDropdown = (dropdownName: string) => {
     setOpenDropdown(openDropdown === dropdownName ? null : dropdownName);
@@ -32,25 +70,49 @@ const FilterSidebar = () => {
   const handleFilterChange = (category: string, value: string) => {
     setSelectedFilters((prev) => {
       const updatedFilters = { ...prev };
-      if (updatedFilters[category].includes(value)) {
-        updatedFilters[category] = updatedFilters[category].filter(
-          (item) => item !== value,
-        );
+
+      // Special handling for Category to make it exclusive (only one at a time)
+      if (category === "Category") {
+        // If already selected, deselect it
+        if (updatedFilters[category].includes(value)) {
+          updatedFilters[category] = [];
+          // Navigate to the base products page when deselecting a category
+          router.push("/products");
+        } else {
+          // Otherwise select only this category
+          updatedFilters[category] = [value];
+
+          // Find the matching route value and navigate directly to the category path
+          const matchedCategory = categories.find((cat) => cat.name === value);
+          if (matchedCategory) {
+            router.push(`/${matchedCategory.value}`);
+          }
+        }
       } else {
-        updatedFilters[category] = [...updatedFilters[category], value];
+        // Normal multi-select behavior for other filter types
+        if (updatedFilters[category].includes(value)) {
+          updatedFilters[category] = updatedFilters[category].filter(
+            (item) => item !== value,
+          );
+        } else {
+          updatedFilters[category] = [...updatedFilters[category], value];
+        }
       }
+
       return updatedFilters;
     });
   };
 
   const clearFilters = () => {
     setSelectedFilters({
+      Category: [],
       "Stock Level": [],
       Color: [],
       "Price Range": [],
-      Material: [],
-      Gender: [],
     });
+
+    // Navigate to base page when clearing filters
+    router.push("/");
   };
 
   const hasActiveFilters = Object.values(selectedFilters).some(
@@ -103,7 +165,7 @@ const FilterSidebar = () => {
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="text-sm font-medium text-black hover:text-white bg-red-500 p-3 rounded-md"
+              className="text-sm font-medium text-white hover:text-white bg-red-500 p-3 rounded-md"
             >
               Clear all
             </button>
