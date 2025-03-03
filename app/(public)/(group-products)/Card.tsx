@@ -4,8 +4,8 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
-import { formatCurrency } from "../utils";
 import Image from "next/image";
+import { formatCurrency } from "./utils";
 
 interface ProductCardProps {
   id: string;

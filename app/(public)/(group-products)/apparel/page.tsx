@@ -1,18 +1,50 @@
-// app/products/page.tsx
-import { getApparelProducts } from "./actions";
-import ProductGrid from "./_components/ProductGrid";
+"use client";
 
-export default async function ProductsPage() {
-  const { products, error } = await getApparelProducts();
+import { useProductsByPathname } from "../_components/_store/useProductsByPathname";
+import ProductGrid from "../UnifiedProductGrid";
+import { useEffect } from "react";
 
-  if (error) {
-    return <div>Error loading products</div>;
+export default function ApparelPage() {
+  // Use the custom hook to get products filtered by pathname
+  const { products, isLoading, error } = useProductsByPathname();
+
+  // Debug logging
+  useEffect(() => {
+    console.log("ApparelPage rendered:", {
+      productsCount: products?.length || 0,
+      isLoading,
+      error,
+    });
+  }, [products, isLoading, error]);
+
+  // Handle loading state
+  if (isLoading) {
+    return <div className="text-center py-12">Loading products...</div>;
   }
 
+  // Handle error state
+  if (error) {
+    console.error("Error loading apparel products:", error);
+    return (
+      <div className="text-center py-12 text-red-500">
+        Error loading products: {error}
+      </div>
+    );
+  }
+
+  // Safe check for products array
+  const safeProducts = Array.isArray(products) ? products : [];
+
   return (
-    <div className="container mx-auto">
-      <h1 className="text-2xl font-bold mb-6 px-4 mt-28">Apparel Collection</h1>
-      <ProductGrid products={products || []} />
+    <div>
+      <h1 className="text-2xl font-bold mb-6">Apparel Collection</h1>
+      {safeProducts.length === 0 ? (
+        <div className="text-center py-12 text-gray-500">
+          No apparel products found.
+        </div>
+      ) : (
+        <ProductGrid products={safeProducts} enableLogging={true} />
+      )}
     </div>
   );
 }
