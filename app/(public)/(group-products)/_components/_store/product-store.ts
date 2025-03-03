@@ -28,11 +28,12 @@ interface ProductState {
   categoryFilter: ProductCategory | "all";
   priceRangeFilter: PriceRange | null;
   stockStatusFilter: StockStatus;
-  colorFilter: string | null;
-  sizeFilter: string | null; // Add size filter
+  colorFilters: string[]; // Array of colors
+  sizeFilters: string[]; // Changed from string | null to string[]
 
   // Available filter options (derived from actual data)
   availableColors: string[];
+  availableSizes: string[]; // Added to track available sizes
 
   // Predefined price ranges
   priceRanges: PriceRange[];
@@ -42,11 +43,13 @@ interface ProductState {
   setCategoryFilter: (category: ProductCategory | "all") => void;
   setPriceRangeFilter: (priceRange: PriceRange | null) => void;
   setStockStatusFilter: (status: StockStatus) => void;
-  setColorFilter: (color: string | null) => void;
-  setSizeFilter: (size: string | null) => void; // Add size filter setter
+  setColorFilters: (colors: string[]) => void;
+  toggleColorFilter: (color: string) => void;
+  setSizeFilters: (sizes: string[]) => void; // Changed to accept array of sizes
+  toggleSizeFilter: (size: string) => void; // Added to toggle a size filter
 
   // Getters for filtered products
-  getFilteredProducts: () => ProductWithVariations[];
+  getFilteredProducts: (pathname?: string) => ProductWithVariations[];
   getApparelProducts: () => ProductWithVariations[];
   getHeadwearProducts: () => ProductWithVariations[];
   getAllCollectionsProducts: () => ProductWithVariations[];
@@ -98,29 +101,32 @@ const getProductStockStatus = (product: ProductWithVariations): StockStatus => {
   return "in-stock";
 };
 
-const hasColor = (
+// Check if product has ANY of the selected colors
+const hasAnyColor = (
   product: ProductWithVariations,
-  color: string | null,
+  colors: string[],
 ): boolean => {
-  if (!color) return true;
+  if (!colors || colors.length === 0) return true;
 
   return (
-    product.variations?.some(
-      (variation) => variation.color.toLowerCase() === color.toLowerCase(),
+    product.variations?.some((variation) =>
+      colors.some(
+        (color) => variation.color.toLowerCase() === color.toLowerCase(),
+      ),
     ) || false
   );
 };
 
-// New helper for filtering by size
-const hasSize = (
+// Updated to check if product has ANY of the selected sizes
+const hasAnySize = (
   product: ProductWithVariations,
-  size: string | null,
+  sizes: string[],
 ): boolean => {
-  if (!size) return true;
+  if (!sizes || sizes.length === 0) return true;
 
   return (
-    product.variations?.some(
-      (variation) => variation.size.toLowerCase() === size.toLowerCase(),
+    product.variations?.some((variation) =>
+      sizes.some((size) => variation.size.toLowerCase() === size.toLowerCase()),
     ) || false
   );
 };
@@ -138,10 +144,11 @@ export const useProductStore = create<ProductState>()(
         categoryFilter: "all",
         priceRangeFilter: null,
         stockStatusFilter: "all",
-        colorFilter: null,
-        sizeFilter: null,
+        colorFilters: [], // Array of colors
+        sizeFilters: [], // Changed from null to empty array
 
         availableColors: [],
+        availableSizes: [], // Added to track available sizes
 
         priceRanges: [
           { min: 0, max: 500, label: "Under R500" },
@@ -161,12 +168,17 @@ export const useProductStore = create<ProductState>()(
               throw new Error(result.error || "Failed to fetch products");
             }
 
-            // Extract all unique colors from variations
+            // Extract all unique colors and sizes from variations
             const allColors = new Set<string>();
+            const allSizes = new Set<string>();
+
             result.products.forEach((product) => {
               product.variations?.forEach((variation) => {
                 if (variation.color) {
                   allColors.add(variation.color.toLowerCase());
+                }
+                if (variation.size) {
+                  allSizes.add(variation.size);
                 }
               });
             });
@@ -175,6 +187,7 @@ export const useProductStore = create<ProductState>()(
               allProducts: result.products,
               isLoading: false,
               availableColors: Array.from(allColors),
+              availableSizes: Array.from(allSizes),
             });
           } catch (error) {
             console.error("Error fetching products:", error);
@@ -189,8 +202,40 @@ export const useProductStore = create<ProductState>()(
         setPriceRangeFilter: (priceRange) =>
           set({ priceRangeFilter: priceRange }),
         setStockStatusFilter: (status) => set({ stockStatusFilter: status }),
-        setColorFilter: (color) => set({ colorFilter: color }),
-        setSizeFilter: (size) => set({ sizeFilter: size }),
+        setColorFilters: (colors) => set({ colorFilters: colors }),
+        toggleColorFilter: (color) => {
+          const { colorFilters } = get();
+          const lowerCaseColor = color.toLowerCase();
+
+          if (colorFilters.includes(lowerCaseColor)) {
+            // Remove color if it's already in the filters
+            set({
+              colorFilters: colorFilters.filter((c) => c !== lowerCaseColor),
+            });
+          } else {
+            // Add color to the filters
+            set({
+              colorFilters: [...colorFilters, lowerCaseColor],
+            });
+          }
+        },
+        setSizeFilters: (sizes) => set({ sizeFilters: sizes }),
+        toggleSizeFilter: (size) => {
+          const { sizeFilters } = get();
+          const normalizedSize = size; // Keep original case for sizes as they might be case-sensitive (S, M, L)
+
+          if (sizeFilters.includes(normalizedSize)) {
+            // Remove size if it's already in the filters
+            set({
+              sizeFilters: sizeFilters.filter((s) => s !== normalizedSize),
+            });
+          } else {
+            // Add size to the filters
+            set({
+              sizeFilters: [...sizeFilters, normalizedSize],
+            });
+          }
+        },
 
         // Getters for filtered products
         getFilteredProducts: (pathname?: string) => {
@@ -199,8 +244,8 @@ export const useProductStore = create<ProductState>()(
             categoryFilter,
             priceRangeFilter,
             stockStatusFilter,
-            colorFilter,
-            sizeFilter,
+            colorFilters,
+            sizeFilters,
           } = get();
 
           // Determine active category based on pathname if provided
@@ -208,8 +253,6 @@ export const useProductStore = create<ProductState>()(
 
           if (pathname) {
             // Extract category from pathname
-            // Example: /products/apparel -> apparel
-            // or /apparel -> apparel
             const pathSegments = pathname.split("/").filter(Boolean);
             const lastSegment = pathSegments[pathSegments.length - 1];
 
@@ -236,8 +279,8 @@ export const useProductStore = create<ProductState>()(
               isInPriceRange(product, priceRangeFilter) &&
               (stockStatusFilter === "all" ||
                 getProductStockStatus(product) === stockStatusFilter) &&
-              hasColor(product, colorFilter) &&
-              hasSize(product, sizeFilter),
+              hasAnyColor(product, colorFilters) &&
+              hasAnySize(product, sizeFilters),
           );
         },
 
@@ -268,9 +311,9 @@ export const useProductStore = create<ProductState>()(
           categoryFilter: state.categoryFilter,
           priceRangeFilter: state.priceRangeFilter,
           stockStatusFilter: state.stockStatusFilter,
-          colorFilter: state.colorFilter,
-          sizeFilter: state.sizeFilter, // Add size filter to persisted state
-        }), // persist filter preferences
+          colorFilters: state.colorFilters,
+          sizeFilters: state.sizeFilters, // Updated from sizeFilter to sizeFilters
+        }),
       },
     ),
   ),

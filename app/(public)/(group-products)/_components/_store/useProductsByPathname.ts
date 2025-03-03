@@ -95,10 +95,41 @@ export function useProductsByPathname() {
     [apparelProducts, headwearProducts, allCollectionsProducts],
   );
 
-  // Get the filters from the store
+  // Get the filters from the store - updated to use colorFilters and sizeFilters arrays
   const priceRangeFilter = useProductStore((state) => state.priceRangeFilter);
   const stockStatusFilter = useProductStore((state) => state.stockStatusFilter);
-  const colorFilter = useProductStore((state) => state.colorFilter);
+  const colorFilters = useProductStore((state) => state.colorFilters);
+  const sizeFilters = useProductStore((state) => state.sizeFilters); // Updated to sizeFilters array
+
+  // Helper function to check if a product has any of the selected colors
+  const hasAnySelectedColor = (
+    product: ProductWithVariations,
+    colors: string[],
+  ): boolean => {
+    if (!colors || colors.length === 0) return true;
+
+    return (
+      product.variations?.some((variation) =>
+        colors.some(
+          (color) => variation.color.toLowerCase() === color.toLowerCase(),
+        ),
+      ) || false
+    );
+  };
+
+  // Helper function to check if a product has any of the selected sizes
+  const hasAnySelectedSize = (
+    product: ProductWithVariations,
+    sizes: string[],
+  ): boolean => {
+    if (!sizes || sizes.length === 0) return true;
+
+    return (
+      product.variations?.some((variation) =>
+        sizes.some((size) => variation.size === size),
+      ) || false
+    );
+  };
 
   // Apply filters based on pathname and store filters
   const products = useMemo(() => {
@@ -121,18 +152,18 @@ export function useProductsByPathname() {
           stockStatusFilter === "all" ||
           getStockStatus(product) === stockStatusFilter;
 
-        const matchesColor =
-          !colorFilter ||
-          product.variations?.some(
-            (variation: Variation) =>
-              variation.color.toLowerCase() === colorFilter?.toLowerCase(),
-          );
+        // Updated to handle multiple colors
+        const matchesColor = hasAnySelectedColor(product, colorFilters);
+
+        // Updated to handle multiple sizes
+        const matchesSize = hasAnySelectedSize(product, sizeFilters);
 
         return (
           matchesCategory &&
           matchesPriceRange &&
           matchesStockStatus &&
-          matchesColor
+          matchesColor &&
+          matchesSize
         );
       });
     } else {
@@ -148,14 +179,15 @@ export function useProductsByPathname() {
           stockStatusFilter === "all" ||
           getStockStatus(product) === stockStatusFilter;
 
-        const matchesColor =
-          !colorFilter ||
-          product.variations?.some(
-            (variation: Variation) =>
-              variation.color.toLowerCase() === colorFilter?.toLowerCase(),
-          );
+        // Updated to handle multiple colors
+        const matchesColor = hasAnySelectedColor(product, colorFilters);
 
-        return matchesPriceRange && matchesStockStatus && matchesColor;
+        // Updated to handle multiple sizes
+        const matchesSize = hasAnySelectedSize(product, sizeFilters);
+
+        return (
+          matchesPriceRange && matchesStockStatus && matchesColor && matchesSize
+        );
       });
     }
   }, [
@@ -163,7 +195,8 @@ export function useProductsByPathname() {
     activeCategory,
     priceRangeFilter,
     stockStatusFilter,
-    colorFilter,
+    colorFilters,
+    sizeFilters,
   ]);
 
   return {

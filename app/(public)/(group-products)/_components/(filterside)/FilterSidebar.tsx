@@ -15,6 +15,9 @@ const FilterSidebar = () => {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
+  // Get all products for generating available options
+  const allProducts = useProductStore(state => state.allProducts);
+  
   // Get products and category information from our custom hook
   const { 
     products, 
@@ -25,8 +28,8 @@ const FilterSidebar = () => {
   const setCategoryFilter = useProductStore(state => state.setCategoryFilter);
   const setPriceRangeFilter = useProductStore(state => state.setPriceRangeFilter);
   const setStockStatusFilter = useProductStore(state => state.setStockStatusFilter);
-  const setColorFilter = useProductStore(state => state.setColorFilter);
-  const setSizeFilter = useProductStore(state => state.setSizeFilter);
+  const setColorFilters = useProductStore(state => state.setColorFilters);
+  const setSizeFilters = useProductStore(state => state.setSizeFilters); // Updated to use setSizeFilters
 
   // Initialize selected filters
   const [selectedFilters, setSelectedFilters] = useState<SelectedFilters>({
@@ -47,12 +50,12 @@ const FilterSidebar = () => {
     []
   );
   
-  // Dynamically get available colors from current products
+  // Dynamically get available colors from ALL products
   const availableColors = useMemo(() => {
     const colorSet = new Set<string>();
     
-    if (products && products.length > 0) {
-      products.forEach(product => {
+    if (allProducts && allProducts.length > 0) {
+      allProducts.forEach(product => {
         product.variations?.forEach(variation => {
           if (variation.color) {
             colorSet.add(variation.color.charAt(0).toUpperCase() + variation.color.slice(1).toLowerCase());
@@ -62,14 +65,14 @@ const FilterSidebar = () => {
     }
     
     return Array.from(colorSet).sort();
-  }, [products]);
+  }, [allProducts]);
   
-  // Dynamically get available sizes from current products
+  // Dynamically get available sizes from ALL products, not just filtered ones
   const availableSizes = useMemo(() => {
     const sizeSet = new Set<string>();
     
-    if (products && products.length > 0) {
-      products.forEach(product => {
+    if (allProducts && allProducts.length > 0) {
+      allProducts.forEach(product => {
         product.variations?.forEach(variation => {
           if (variation.size) {
             sizeSet.add(variation.size);
@@ -79,7 +82,7 @@ const FilterSidebar = () => {
     }
     
     return Array.from(sizeSet).sort();
-  }, [products]);
+  }, [allProducts]); // Changed dependency to allProducts
   
   // Generate price ranges based on products in ZAR
   const availablePriceRanges = useMemo(() => {
@@ -200,20 +203,18 @@ const FilterSidebar = () => {
       setStockStatusFilter("all");
     }
 
-    // Apply color filter - now supports multiple colors
+    // Apply color filters
     if (selectedColors && selectedColors.length > 0) {
-      // Using first color for now (store needs to be updated to support multiple)
-      setColorFilter(selectedColors[0].toLowerCase());
+      setColorFilters(selectedColors.map(color => color.toLowerCase()));
     } else {
-      setColorFilter(null);
+      setColorFilters([]);
     }
     
-    // Apply size filter
+    // Apply size filters - updated to support multiple sizes
     if (selectedSizes && selectedSizes.length > 0) {
-      // Using first size for now (multiple size support would need custom logic)
-      setSizeFilter(selectedSizes[0]);
+      setSizeFilters(selectedSizes);
     } else {
-      setSizeFilter(null);
+      setSizeFilters([]);
     }
   }, [
     selectedPriceRanges,
@@ -223,8 +224,8 @@ const FilterSidebar = () => {
     getPriceRangeValues,
     setPriceRangeFilter,
     setStockStatusFilter,
-    setColorFilter,
-    setSizeFilter
+    setColorFilters,
+    setSizeFilters
   ]);
 
   const clearFilters = useCallback(() => {
