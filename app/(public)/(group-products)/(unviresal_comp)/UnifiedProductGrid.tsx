@@ -27,8 +27,8 @@ export default function ProductGrid({
     switch (categorySegment.toLowerCase()) {
       case "apparel":
         return "/apparel";
-      case "all-in-headwear":
-        return "/all-in-headwear";
+      case "headwear":
+        return "/headwear";
       case "all-collections":
       default:
         return "/all-collections";
@@ -80,6 +80,7 @@ export default function ProductGrid({
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
       {products.map((product) => (
         <Link href={`${baseRoute}/${product.id}`} key={product.id}>
+          {/* Pass the entire product object, including variations */}
           <ProductCard {...product} />
         </Link>
       ))}
