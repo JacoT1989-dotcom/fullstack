@@ -2,7 +2,6 @@
 
 import prisma from "@/lib/prisma";
 import { ProductActionResult } from "./types";
-import { error } from "console";
 
 /**
  * Fetches all products from the database with their variations,

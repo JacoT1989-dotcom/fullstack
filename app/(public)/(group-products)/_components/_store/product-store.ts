@@ -1,7 +1,6 @@
 // productStore.ts
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
-import { usePathname } from "next/navigation";
 import {
   ProductActionResult,
   ProductCategory,
@@ -30,6 +29,7 @@ interface ProductState {
   priceRangeFilter: PriceRange | null;
   stockStatusFilter: StockStatus;
   colorFilter: string | null;
+  sizeFilter: string | null; // Add size filter
 
   // Available filter options (derived from actual data)
   availableColors: string[];
@@ -43,6 +43,7 @@ interface ProductState {
   setPriceRangeFilter: (priceRange: PriceRange | null) => void;
   setStockStatusFilter: (status: StockStatus) => void;
   setColorFilter: (color: string | null) => void;
+  setSizeFilter: (size: string | null) => void; // Add size filter setter
 
   // Getters for filtered products
   getFilteredProducts: () => ProductWithVariations[];
@@ -110,6 +111,20 @@ const hasColor = (
   );
 };
 
+// New helper for filtering by size
+const hasSize = (
+  product: ProductWithVariations,
+  size: string | null,
+): boolean => {
+  if (!size) return true;
+
+  return (
+    product.variations?.some(
+      (variation) => variation.size.toLowerCase() === size.toLowerCase(),
+    ) || false
+  );
+};
+
 // Create the store
 export const useProductStore = create<ProductState>()(
   devtools(
@@ -124,15 +139,15 @@ export const useProductStore = create<ProductState>()(
         priceRangeFilter: null,
         stockStatusFilter: "all",
         colorFilter: null,
+        sizeFilter: null,
 
         availableColors: [],
 
         priceRanges: [
-          { min: 0, max: 20, label: "Under $20" },
-          { min: 20, max: 50, label: "$20 - $50" },
-          { min: 50, max: 100, label: "$50 - $100" },
-          { min: 100, max: 200, label: "$100 - $200" },
-          { min: 200, max: null, label: "$200 & Above" },
+          { min: 0, max: 500, label: "Under R500" },
+          { min: 500, max: 1000, label: "R500 - R1000" },
+          { min: 1000, max: 2000, label: "R1000 - R2000" },
+          { min: 2000, max: null, label: "R2000 & Above" },
         ],
 
         // Actions
@@ -175,6 +190,7 @@ export const useProductStore = create<ProductState>()(
           set({ priceRangeFilter: priceRange }),
         setStockStatusFilter: (status) => set({ stockStatusFilter: status }),
         setColorFilter: (color) => set({ colorFilter: color }),
+        setSizeFilter: (size) => set({ sizeFilter: size }),
 
         // Getters for filtered products
         getFilteredProducts: (pathname?: string) => {
@@ -184,6 +200,7 @@ export const useProductStore = create<ProductState>()(
             priceRangeFilter,
             stockStatusFilter,
             colorFilter,
+            sizeFilter,
           } = get();
 
           // Determine active category based on pathname if provided
@@ -219,7 +236,8 @@ export const useProductStore = create<ProductState>()(
               isInPriceRange(product, priceRangeFilter) &&
               (stockStatusFilter === "all" ||
                 getProductStockStatus(product) === stockStatusFilter) &&
-              hasColor(product, colorFilter),
+              hasColor(product, colorFilter) &&
+              hasSize(product, sizeFilter),
           );
         },
 
@@ -251,7 +269,8 @@ export const useProductStore = create<ProductState>()(
           priceRangeFilter: state.priceRangeFilter,
           stockStatusFilter: state.stockStatusFilter,
           colorFilter: state.colorFilter,
-        }), // only persist filter preferences
+          sizeFilter: state.sizeFilter, // Add size filter to persisted state
+        }), // persist filter preferences
       },
     ),
   ),

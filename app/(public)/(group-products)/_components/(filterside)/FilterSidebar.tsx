@@ -1,7 +1,9 @@
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { ChevronDown, ChevronUp, SlidersHorizontal, X } from "lucide-react";
+import { useProductStore } from "../_store/product-store";
+import { useProductsByPathname } from "../_store/useProductsByPathname";
 
 interface SelectedFilters {
   [key: string]: string[];
@@ -13,85 +15,152 @@ const FilterSidebar = () => {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  // Add category to our filters
+  // Get products and category information from our custom hook
+  const { 
+    products, 
+    activeCategory 
+  } = useProductsByPathname();
+  
+  // Access filter setters from the Zustand store
+  const setCategoryFilter = useProductStore(state => state.setCategoryFilter);
+  const setPriceRangeFilter = useProductStore(state => state.setPriceRangeFilter);
+  const setStockStatusFilter = useProductStore(state => state.setStockStatusFilter);
+  const setColorFilter = useProductStore(state => state.setColorFilter);
+  const setSizeFilter = useProductStore(state => state.setSizeFilter);
+
+  // Initialize selected filters
   const [selectedFilters, setSelectedFilters] = useState<SelectedFilters>({
     Category: [],
     "Stock Level": [],
     Color: [],
     "Price Range": [],
+    Size: [],
   });
 
-  // Define available categories with useMemo to prevent recreation on each render
+  // Define available categories with useMemo
   const categories = useMemo(
     () => [
       { name: "Apparel", value: "apparel" },
       { name: "Headwear", value: "headwear" },
       { name: "All Collections", value: "all-collections" },
     ],
-    [],
+    []
   );
+  
+  // Dynamically get available colors from current products
+  const availableColors = useMemo(() => {
+    const colorSet = new Set<string>();
+    
+    if (products && products.length > 0) {
+      products.forEach(product => {
+        product.variations?.forEach(variation => {
+          if (variation.color) {
+            colorSet.add(variation.color.charAt(0).toUpperCase() + variation.color.slice(1).toLowerCase());
+          }
+        });
+      });
+    }
+    
+    return Array.from(colorSet).sort();
+  }, [products]);
+  
+  // Dynamically get available sizes from current products
+  const availableSizes = useMemo(() => {
+    const sizeSet = new Set<string>();
+    
+    if (products && products.length > 0) {
+      products.forEach(product => {
+        product.variations?.forEach(variation => {
+          if (variation.size) {
+            sizeSet.add(variation.size);
+          }
+        });
+      });
+    }
+    
+    return Array.from(sizeSet).sort();
+  }, [products]);
+  
+  // Generate price ranges based on products in ZAR
+  const availablePriceRanges = useMemo(() => {
+    return [
+      "Under R500", 
+      "R500-R1000", 
+      "R1000-R2000", 
+      "Over R2000"
+    ];
+  }, []);
 
-  // Other filters remain the same
-  const filters = {
+  // Generate filters object with dynamic data
+  const filters = useMemo(() => ({
     Category: categories.map((cat) => cat.name),
     "Stock Level": ["In Stock", "Out of Stock", "Low Stock"],
-    Color: ["Black", "White", "Red", "Blue", "Green"],
-    "Price Range": ["Under $50", "$50-$100", "$100-$200", "Over $200"],
-  };
+    Color: availableColors,
+    "Price Range": availablePriceRanges,
+    Size: availableSizes,
+  }), [categories, availableColors, availablePriceRanges, availableSizes]);
 
-  // Set initial category based on pathname when component mounts
+  // Update selected category based on pathname
   useEffect(() => {
-    if (pathname) {
-      const pathSegments = pathname.split("/").filter(Boolean);
-      const lastSegment = pathSegments[pathSegments.length - 1];
+    if (!pathname) return;
+    
+    const pathSegments = pathname.split("/").filter(Boolean);
+    const lastSegment = pathSegments[pathSegments.length - 1];
 
-      // Find if this segment corresponds to one of our categories
-      const matchedCategory = categories.find(
-        (cat) => lastSegment.toLowerCase() === cat.value,
-      );
+    const matchedCategory = categories.find(
+      (cat) => lastSegment.toLowerCase() === cat.value
+    );
 
-      if (matchedCategory) {
-        // Update selected filters with this category
-        setSelectedFilters((prev) => ({
-          ...prev,
-          Category: [matchedCategory.name],
-        }));
-
-        // Open the category dropdown by default
-        setOpenDropdown("Category");
-      }
+    if (matchedCategory) {
+      setSelectedFilters(prev => ({
+        ...prev,
+        Category: [matchedCategory.name],
+      }));
+      setOpenDropdown("Category");
     }
   }, [pathname, categories]);
 
-  const toggleDropdown = (dropdownName: string) => {
-    setOpenDropdown(openDropdown === dropdownName ? null : dropdownName);
-  };
+  // Convert price range label to actual min/max values
+  const getPriceRangeValues = useCallback((label: string) => {
+    switch(label) {
+      case "Under R500":
+        return { min: 0, max: 500 };
+      case "R500-R1000":
+        return { min: 500, max: 1000 };
+      case "R1000-R2000":
+        return { min: 1000, max: 2000 };
+      case "Over R2000":
+        return { min: 2000, max: null };
+      default:
+        return null;
+    }
+  }, []);
 
-  const handleFilterChange = (category: string, value: string) => {
-    setSelectedFilters((prev) => {
+  const toggleDropdown = useCallback((dropdownName: string) => {
+    setOpenDropdown(prev => prev === dropdownName ? null : dropdownName);
+  }, []);
+
+  const handleFilterChange = useCallback((category: string, value: string) => {
+    setSelectedFilters(prev => {
       const updatedFilters = { ...prev };
 
-      // Special handling for Category to make it exclusive (only one at a time)
+      // Handle Category specially (exclusive selection)
       if (category === "Category") {
-        // If already selected, deselect it
         if (updatedFilters[category].includes(value)) {
           updatedFilters[category] = [];
-          // Don't navigate - just update the filter state
         } else {
-          // Otherwise select only this category
           updatedFilters[category] = [value];
-
-          // Find the matching route value and navigate directly to the category path
+          // Find the matching route value and navigate
           const matchedCategory = categories.find((cat) => cat.name === value);
           if (matchedCategory) {
             router.push(`/${matchedCategory.value}`);
           }
         }
       } else {
-        // Normal multi-select behavior for other filter types
+        // For other filters, toggle selection (allow multiple)
         if (updatedFilters[category].includes(value)) {
           updatedFilters[category] = updatedFilters[category].filter(
-            (item) => item !== value,
+            (item) => item !== value
           );
         } else {
           updatedFilters[category] = [...updatedFilters[category], value];
@@ -100,26 +169,81 @@ const FilterSidebar = () => {
 
       return updatedFilters;
     });
-  };
+  }, [categories, router]);
 
-  const clearFilters = () => {
-    // Keep the Category but clear other filters
-    setSelectedFilters((prev) => ({
-      Category: prev.Category, // Preserve category selection
+  // Apply filters to store when selections change
+  const selectedPriceRanges = selectedFilters["Price Range"];
+  const selectedStockLevels = selectedFilters["Stock Level"];
+  const selectedColors = selectedFilters["Color"];
+  const selectedSizes = selectedFilters["Size"];
+
+  useEffect(() => {
+    // Apply price range filter
+    if (selectedPriceRanges && selectedPriceRanges.length > 0) {
+      const priceRangeValues = getPriceRangeValues(selectedPriceRanges[0]);
+      if (priceRangeValues) {
+        setPriceRangeFilter({
+          min: priceRangeValues.min,
+          max: priceRangeValues.max,
+          label: selectedPriceRanges[0]
+        });
+      }
+    } else {
+      setPriceRangeFilter(null);
+    }
+
+    // Apply stock status filter
+    if (selectedStockLevels && selectedStockLevels.length > 0) {
+      const status = selectedStockLevels[0].toLowerCase().replace(/\s+/g, '-');
+      setStockStatusFilter(status as any);
+    } else {
+      setStockStatusFilter("all");
+    }
+
+    // Apply color filter - now supports multiple colors
+    if (selectedColors && selectedColors.length > 0) {
+      // Using first color for now (store needs to be updated to support multiple)
+      setColorFilter(selectedColors[0].toLowerCase());
+    } else {
+      setColorFilter(null);
+    }
+    
+    // Apply size filter
+    if (selectedSizes && selectedSizes.length > 0) {
+      // Using first size for now (multiple size support would need custom logic)
+      setSizeFilter(selectedSizes[0]);
+    } else {
+      setSizeFilter(null);
+    }
+  }, [
+    selectedPriceRanges,
+    selectedStockLevels,
+    selectedColors,
+    selectedSizes,
+    getPriceRangeValues,
+    setPriceRangeFilter,
+    setStockStatusFilter,
+    setColorFilter,
+    setSizeFilter
+  ]);
+
+  const clearFilters = useCallback(() => {
+    // Keep Category but clear other filters
+    setSelectedFilters(prev => ({
+      Category: prev.Category,
       "Stock Level": [],
       Color: [],
       "Price Range": [],
+      Size: []
     }));
+  }, []);
 
-    // No navigation needed
-  };
-
-  // Check if there are any active filters, excluding Category
+  // Check if there are any active filters (excluding Category)
   const hasActiveFilters = Object.entries(selectedFilters).some(
-    ([category, filters]) => category !== "Category" && filters.length > 0,
+    ([category, filters]) => category !== "Category" && filters.length > 0
   );
 
-  const FilterSection = ({
+  const FilterSection = useCallback(({
     title,
     options,
   }: {
@@ -141,23 +265,27 @@ const FilterSidebar = () => {
 
       {openDropdown === title && (
         <div className="px-4 pb-3 space-y-2">
-          {options.map((option) => (
-            <label key={option} className="flex items-center">
-              <input
-                type="checkbox"
-                checked={selectedFilters[title].includes(option)}
-                onChange={() => handleFilterChange(title, option)}
-                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-              />
-              <span className="ml-3 text-sm text-gray-600">{option}</span>
-            </label>
-          ))}
+          {options.length > 0 ? (
+            options.map((option) => (
+              <label key={option} className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={selectedFilters[title].includes(option)}
+                  onChange={() => handleFilterChange(title, option)}
+                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                />
+                <span className="ml-3 text-sm text-gray-600">{option}</span>
+              </label>
+            ))
+          ) : (
+            <div className="text-sm text-gray-500">No options available</div>
+          )}
         </div>
       )}
     </div>
-  );
+  ), [openDropdown, selectedFilters, toggleDropdown, handleFilterChange]);
 
-  const SidebarContent = () => (
+  const SidebarContent = useCallback(() => (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
       <div className="p-4 border-b border-gray-200">
         <div className="flex justify-between items-center">
@@ -174,7 +302,7 @@ const FilterSidebar = () => {
         {hasActiveFilters && (
           <div className="mt-2 flex flex-wrap gap-2">
             {Object.entries(selectedFilters)
-              .filter(([category]) => category !== "Category") // Exclude Category from display
+              .filter(([category]) => category !== "Category")
               .map(([category, values]) =>
                 values.map((value) => (
                   <span
@@ -189,7 +317,7 @@ const FilterSidebar = () => {
                       <X className="h-3 w-3" />
                     </button>
                   </span>
-                )),
+                ))
               )}
           </div>
         )}
@@ -200,7 +328,7 @@ const FilterSidebar = () => {
         ))}
       </div>
     </div>
-  );
+  ), [FilterSection, clearFilters, filters, handleFilterChange, hasActiveFilters, selectedFilters]);
 
   return (
     <>
