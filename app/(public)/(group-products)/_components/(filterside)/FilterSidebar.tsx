@@ -76,8 +76,7 @@ const FilterSidebar = () => {
         // If already selected, deselect it
         if (updatedFilters[category].includes(value)) {
           updatedFilters[category] = [];
-          // Navigate to the base products page when deselecting a category
-          router.push("/products");
+          // Don't navigate - just update the filter state
         } else {
           // Otherwise select only this category
           updatedFilters[category] = [value];
@@ -104,19 +103,20 @@ const FilterSidebar = () => {
   };
 
   const clearFilters = () => {
-    setSelectedFilters({
-      Category: [],
+    // Keep the Category but clear other filters
+    setSelectedFilters((prev) => ({
+      Category: prev.Category, // Preserve category selection
       "Stock Level": [],
       Color: [],
       "Price Range": [],
-    });
+    }));
 
-    // Navigate to base page when clearing filters
-    router.push("/");
+    // No navigation needed
   };
 
-  const hasActiveFilters = Object.values(selectedFilters).some(
-    (filters) => filters.length > 0,
+  // Check if there are any active filters, excluding Category
+  const hasActiveFilters = Object.entries(selectedFilters).some(
+    ([category, filters]) => category !== "Category" && filters.length > 0,
   );
 
   const FilterSection = ({
@@ -173,22 +173,24 @@ const FilterSidebar = () => {
         </div>
         {hasActiveFilters && (
           <div className="mt-2 flex flex-wrap gap-2">
-            {Object.entries(selectedFilters).map(([category, values]) =>
-              values.map((value) => (
-                <span
-                  key={`${category}-${value}`}
-                  className="inline-flex items-center px-2 py-1 rounded-md text-sm bg-gray-100 text-gray-700"
-                >
-                  {value}
-                  <button
-                    onClick={() => handleFilterChange(category, value)}
-                    className="ml-1 text-gray-400 hover:text-gray-600"
+            {Object.entries(selectedFilters)
+              .filter(([category]) => category !== "Category") // Exclude Category from display
+              .map(([category, values]) =>
+                values.map((value) => (
+                  <span
+                    key={`${category}-${value}`}
+                    className="inline-flex items-center px-2 py-1 rounded-md text-sm bg-gray-100 text-gray-700"
                   >
-                    <X className="h-3 w-3" />
-                  </button>
-                </span>
-              )),
-            )}
+                    {value}
+                    <button
+                      onClick={() => handleFilterChange(category, value)}
+                      className="ml-1 text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                )),
+              )}
           </div>
         )}
       </div>
