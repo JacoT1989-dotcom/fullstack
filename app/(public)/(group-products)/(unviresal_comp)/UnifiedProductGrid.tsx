@@ -4,7 +4,7 @@ import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ProductCard } from "./Card";
-import { ProductWithVariations } from "./_components/(filterside)/types";
+import { ProductWithVariations } from "../_components/(filterside)/types";
 
 interface ProductGridProps {
   products: ProductWithVariations[];

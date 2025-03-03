@@ -1,7 +1,7 @@
 "use client";
 
 import { useProductsByPathname } from "../_components/_store/useProductsByPathname";
-import ProductGrid from "../UnifiedProductGrid";
+import ProductGrid from "../(unviresal_comp)/UnifiedProductGrid";
 import { useEffect } from "react";
 
 export default function HeadwearPage() {
