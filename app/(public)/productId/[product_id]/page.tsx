@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import ProductDetails from "./ProductDetails";
+import ProductDetails from "./_components/ProductDetails";
 
 export default function ProductDetailsPage() {
   return (
