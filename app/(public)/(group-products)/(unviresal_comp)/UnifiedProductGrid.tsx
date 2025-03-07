@@ -18,23 +18,6 @@ export default function ProductGrid({
   const pathname = usePathname();
   const loggedRef = useRef(false);
 
-  // Determine the base route for product links
-  const getBaseRoute = () => {
-    const pathSegments = pathname.split("/").filter(Boolean);
-    const categorySegment = pathSegments[0] || "all-collections";
-
-    // Map known categories to their routes
-    switch (categorySegment.toLowerCase()) {
-      case "apparel":
-        return "/apparel";
-      case "headwear":
-        return "/headwear";
-      case "all-collections":
-      default:
-        return "/all-collections";
-    }
-  };
-
   // Debugging logs if enabled - only log once to prevent excessive re-renders
   useEffect(() => {
     if (!enableLogging || loggedRef.current) return;
@@ -74,12 +57,10 @@ export default function ProductGrid({
     );
   }
 
-  const baseRoute = getBaseRoute();
-
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
       {products.map((product) => (
-        <Link href={`${baseRoute}/${product.id}`} key={product.id}>
+        <Link href={`/productId/${product.id}`} key={product.id}>
           {/* Pass the entire product object, including variations */}
           <ProductCard {...product} />
         </Link>

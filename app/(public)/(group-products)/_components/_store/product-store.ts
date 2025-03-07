@@ -6,7 +6,7 @@ import {
   ProductCategory,
   ProductWithVariations,
 } from "../(filterside)/types";
-import { getAllProducts } from "../(filterside)/product-fetch";
+import { getAllProducts, getProductById } from "../(filterside)/product-fetch";
 
 // Define stock status types
 export type StockStatus = "in-stock" | "low-stock" | "out-of-stock" | "all";
@@ -21,8 +21,11 @@ export type PriceRange = {
 // Define the store state type
 interface ProductState {
   allProducts: ProductWithVariations[];
+  currentProduct: ProductWithVariations | null; // Add current product state
   isLoading: boolean;
+  isLoadingProduct: boolean; // Add loading state for individual product
   error: string | null;
+  productError: string | null; // Add error state for individual product
 
   // Filter states
   categoryFilter: ProductCategory | "all";
@@ -40,6 +43,10 @@ interface ProductState {
 
   // Actions
   fetchProducts: () => Promise<void>;
+  fetchProductById: (
+    productId: string,
+  ) => Promise<ProductWithVariations | null>; // Add new action
+  clearCurrentProduct: () => void; // Add action to clear current product
   setCategoryFilter: (category: ProductCategory | "all") => void;
   setPriceRangeFilter: (priceRange: PriceRange | null) => void;
   setStockStatusFilter: (status: StockStatus) => void;
@@ -138,8 +145,11 @@ export const useProductStore = create<ProductState>()(
       (set, get) => ({
         // Initial state
         allProducts: [],
+        currentProduct: null, // Initialize current product as null
         isLoading: false,
+        isLoadingProduct: false, // Initialize loading state for individual product
         error: null,
+        productError: null, // Initialize error state for individual product
 
         categoryFilter: "all",
         priceRangeFilter: null,
@@ -197,6 +207,40 @@ export const useProductStore = create<ProductState>()(
             });
           }
         },
+
+        // New action to fetch a single product by ID
+        fetchProductById: async (productId: string) => {
+          set({ isLoadingProduct: true, productError: null });
+
+          try {
+            const result: ProductActionResult = await getProductById(productId);
+
+            if (!result.success || !result.product) {
+              throw new Error(result.error || "Failed to fetch product");
+            }
+
+            set({
+              currentProduct: result.product,
+              isLoadingProduct: false,
+            });
+
+            return result.product;
+          } catch (error) {
+            console.error(
+              `Error fetching product with ID ${productId}:`,
+              error,
+            );
+            set({
+              isLoadingProduct: false,
+              productError:
+                error instanceof Error ? error.message : "Unknown error",
+            });
+            return null;
+          }
+        },
+
+        // Action to clear the current product
+        clearCurrentProduct: () => set({ currentProduct: null }),
 
         setCategoryFilter: (category) => set({ categoryFilter: category }),
         setPriceRangeFilter: (priceRange) =>
@@ -313,6 +357,7 @@ export const useProductStore = create<ProductState>()(
           stockStatusFilter: state.stockStatusFilter,
           colorFilters: state.colorFilters,
           sizeFilters: state.sizeFilters, // Updated from sizeFilter to sizeFilters
+          // We don't persist currentProduct as it should be fetched fresh
         }),
       },
     ),
