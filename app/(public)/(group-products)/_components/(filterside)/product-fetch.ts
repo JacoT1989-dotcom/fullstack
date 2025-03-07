@@ -87,8 +87,6 @@ export async function getProductById(
   productId: string,
 ): Promise<ProductActionResult> {
   try {
-    console.log(`Server: Fetching product with ID: ${productId}`);
-
     const product = await prisma.product.findUnique({
       where: {
         id: productId,
@@ -121,14 +119,11 @@ export async function getProductById(
     });
 
     if (!product) {
-      console.log(`Server: Product with ID ${productId} not found`);
       return {
         success: false,
         error: "Product not found",
       };
     }
-
-    console.log(`Server: Successfully fetched product with ID: ${productId}`);
 
     // Transform the product data
     const { Variation, ...productData } = product;
