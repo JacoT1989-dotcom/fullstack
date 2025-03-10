@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner"; // Changed from react-hot-toast to sonner
 import { useProductDetails } from "../useProductDetails";
 import { useProductStore } from "../../../(group-products)/_components/_store/product-store";
 import ProductImage from "./ProductImage";
@@ -20,12 +21,30 @@ interface Variation {
   imageUrl: string;
 }
 
+interface AddToCartResult {
+  success: boolean;
+  message: string;
+  cartItemCount?: number;
+}
+
 interface ProductDetailsProps {
   initialProductId?: string;
+  addToCartAction: (formData: {
+    variationId: string;
+    quantity: number;
+  }) => Promise<AddToCartResult>;
+  updateCartItemAction?: (formData: {
+    cartItemId: string;
+    quantity: number;
+  }) => Promise<AddToCartResult>;
+  clearCartAction?: () => Promise<{ success: boolean; message: string }>;
 }
 
 export default function ProductDetails({
   initialProductId,
+  addToCartAction,
+  updateCartItemAction,
+  clearCartAction,
 }: ProductDetailsProps) {
   const params = useParams();
   const [isStoreReady, setIsStoreReady] = useState<boolean>(false);
@@ -34,6 +53,8 @@ export default function ProductDetails({
   const [selectedVariationImage, setSelectedVariationImage] = useState<
     string | null
   >(null);
+  const [quantity, setQuantity] = useState<number>(1);
+  const [isAddingToCart, setIsAddingToCart] = useState<boolean>(false);
 
   // Get store data
   const allProducts = useProductStore((state) => state.allProducts);
@@ -104,13 +125,14 @@ export default function ProductDetails({
     );
   }, [product, selectedColor, selectedSize]);
 
-  // Set default selections when product loads
+  // Set default selections when product loads, but don't reset quantity
   useEffect(() => {
     if (product?.variations?.length) {
       const firstVariation = product.variations[0];
       setSelectedColor(firstVariation.color);
       setSelectedSize(firstVariation.size);
       setSelectedVariationImage(firstVariation.imageUrl);
+      // Removed the setQuantity(1) line to preserve quantity
     }
   }, [product]);
 
@@ -152,6 +174,37 @@ export default function ProductDetails({
     }
   };
 
+  // Handle adding to cart
+  const handleAddToCart = async () => {
+    if (!currentVariation) return;
+
+    setIsAddingToCart(true);
+
+    try {
+      const result = await addToCartAction({
+        variationId: currentVariation.id,
+        quantity: quantity,
+      });
+
+      if (result.success) {
+        // Use Sonner toast with more detailed information
+        toast.success(`Added ${quantity} item(s) to cart`, {
+          description: currentVariation.name || product?.productName,
+          duration: 3000,
+        });
+
+        // Not resetting quantity to 1 here to preserve the user's selection
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      toast.error("Failed to add item to cart");
+      console.error("Add to cart error:", error);
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
   // Check loading, error, and not found states
   const showStatus = !isStoreReady || isLoading || error || !product;
   if (showStatus) {
@@ -168,26 +221,101 @@ export default function ProductDetails({
   // No variations
   if (!product.variations || product.variations.length === 0) {
     return (
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-          <div className="p-4">
-            <h1 className="text-xl font-bold mb-2">{product.productName}</h1>
-            <ProductImage
-              imageUrl={product.productImgUrl}
-              productName={product.productName}
-            />
-            <p className="text-lg font-semibold mb-2">
-              R{product.sellingPrice.toFixed(2)}
-            </p>
-            <div className="mb-4 text-sm">
-              <p>{product.description}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[600px]">
+            {/* Product Image */}
+            <div className="p-4 h-full flex items-center">
+              <div className="w-full">
+                <ProductImage
+                  imageUrl={product.productImgUrl}
+                  productName={product.productName}
+                />
+              </div>
             </div>
-            <div className="my-3 text-sm text-yellow-600">
-              <p>No variations available for this product</p>
+
+            {/* Product Details */}
+            <div className="p-4">
+              <h1 className="text-xl font-bold mb-2">{product.productName}</h1>
+              <p className="text-lg font-semibold mb-2">
+                R{(product.sellingPrice * quantity).toFixed(2)}
+                {quantity > 1 && (
+                  <span className="text-sm text-gray-600 ml-2">
+                    (R{product.sellingPrice.toFixed(2)} each)
+                  </span>
+                )}
+              </p>
+              <div className="mb-4 text-sm">
+                <p>{product.description}</p>
+              </div>
+              <div className="my-3 text-sm text-yellow-600">
+                <p>No variations available for this product</p>
+              </div>
+
+              {/* Quantity Selector */}
+              <div className="mt-6 mb-4">
+                <label
+                  htmlFor="quantity"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Quantity
+                </label>
+                <div className="flex items-center">
+                  <button
+                    type="button"
+                    className="w-10 h-10 bg-gray-100 rounded-l flex items-center justify-center hover:bg-gray-200"
+                    onClick={() => setQuantity(quantity > 1 ? quantity - 1 : 1)}
+                  >
+                    <span className="text-lg">−</span>
+                  </button>
+                  <input
+                    type="number"
+                    id="quantity"
+                    className="w-16 h-10 text-center border-y focus:outline-none"
+                    min="1"
+                    value={quantity}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value);
+                      if (isNaN(val)) {
+                        setQuantity(1);
+                      } else if (val < 1) {
+                        setQuantity(1);
+                      } else {
+                        setQuantity(val);
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="w-10 h-10 bg-gray-100 rounded-r flex items-center justify-center hover:bg-gray-200"
+                    onClick={() => setQuantity(quantity + 1)}
+                  >
+                    <span className="text-lg">+</span>
+                  </button>
+                </div>
+              </div>
+
+              <button
+                className={`mt-3 w-full bg-black text-white py-2 rounded hover:bg-gray-800 ${
+                  isAddingToCart ? "opacity-70 cursor-not-allowed" : ""
+                }`}
+                onClick={() => {
+                  // We can't use server actions here since there's no variation
+                  console.log("Adding to cart:", {
+                    productId: product.id,
+                    productName: product.productName,
+                    quantity: quantity,
+                    price: product.sellingPrice,
+                  });
+                  toast.error(
+                    "This product cannot be added to cart as it has no variations",
+                  );
+                }}
+                disabled={isAddingToCart}
+              >
+                {isAddingToCart ? "Adding..." : "Add to Cart"}
+              </button>
             </div>
-            <button className="mt-3 w-full bg-black text-white py-2 rounded hover:bg-gray-800">
-              Add to Cart
-            </button>
           </div>
         </div>
       </div>
@@ -195,69 +323,153 @@ export default function ProductDetails({
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-4xl mx-auto">
       <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-        <div className="p-4">
-          <h1 className="text-xl font-bold mb-2">{product.productName}</h1>
-
-          <ProductImage
-            imageUrl={selectedVariationImage || product.productImgUrl}
-            productName={product.productName}
-          />
-
-          <p className="text-lg font-semibold mb-2">
-            R
-            {currentVariation?.price.toFixed(2) ||
-              product.sellingPrice.toFixed(2)}
-          </p>
-
-          <div className="mb-4 text-sm">
-            <p>{product.description}</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Product Image - Left Column */}
+          <div className="p-4 h-full flex items-center">
+            <div className="w-full">
+              <ProductImage
+                imageUrl={selectedVariationImage || product.productImgUrl}
+                productName={product.productName}
+              />
+            </div>
           </div>
 
-          <VariationSelector
-            variations={product.variations}
-            selectedColor={selectedColor}
-            selectedSize={selectedSize}
-            onColorSelect={handleColorSelect}
-            onSizeSelect={setSelectedSize}
-            currentVariation={currentVariation}
-          />
+          {/* Product Details - Right Column */}
+          <div className="p-4">
+            <h1 className="text-xl font-bold mb-2">{product.productName}</h1>
 
-          {/* Debug Info - Remove this in production */}
-          <div className="mt-3 p-2 bg-gray-100 rounded text-xs text-gray-700">
-            <p>Product ID: {product.id}</p>
-            <p>Selected Color: {selectedColor}</p>
-            <p>Selected Size: {selectedSize}</p>
-            <p>Variation ID: {currentVariation?.id || "none"}</p>
-            <p>
-              Image: {selectedVariationImage?.split("/").pop() || "(default)"}
+            <p className="text-lg font-semibold mb-2">
+              R
+              {(currentVariation
+                ? currentVariation.price * quantity
+                : product.sellingPrice * quantity
+              ).toFixed(2)}
+              {quantity > 1 && (
+                <span className="text-sm text-gray-600 ml-2">
+                  (R
+                  {(currentVariation?.price || product.sellingPrice).toFixed(
+                    2,
+                  )}{" "}
+                  each)
+                </span>
+              )}
             </p>
-          </div>
 
-          {/* Add to cart button */}
-          <button
-            className="mt-3 w-full bg-black text-white py-2 rounded hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed"
-            disabled={!currentVariation || currentVariation.quantity <= 0}
-            onClick={() => {
-              if (currentVariation) {
-                console.log("Adding to cart:", {
-                  variationId: currentVariation.id,
-                  name: currentVariation.name,
-                  color: currentVariation.color,
-                  size: currentVariation.size,
-                  sku: currentVariation.sku,
-                  quantity: 1,
-                  availableStock: currentVariation.quantity,
-                  price: currentVariation.price,
-                  productId: product.id,
-                  productName: product.productName,
-                });
+            <div className="mb-4 text-sm">
+              <p>{product.description}</p>
+            </div>
+
+            <VariationSelector
+              variations={product.variations}
+              selectedColor={selectedColor}
+              selectedSize={selectedSize}
+              onColorSelect={handleColorSelect}
+              onSizeSelect={setSelectedSize}
+              currentVariation={currentVariation}
+            />
+
+            {/* Debug Info - Remove this in production */}
+            <div className="mt-3 p-2 bg-gray-100 rounded text-xs text-gray-700">
+              <p>Product ID: {product.id}</p>
+              <p>Selected Color: {selectedColor}</p>
+              <p>Selected Size: {selectedSize}</p>
+              <p>Variation ID: {currentVariation?.id || "none"}</p>
+              <p>
+                Image: {selectedVariationImage?.split("/").pop() || "(default)"}
+              </p>
+            </div>
+
+            {/* Quantity Selector */}
+            <div className="mt-6 mb-4">
+              <label
+                htmlFor="quantity"
+                className="block text-sm font-medium mb-1"
+              >
+                Quantity
+              </label>
+              <div className="flex items-center">
+                <button
+                  type="button"
+                  className="w-10 h-10 bg-gray-100 rounded-l flex items-center justify-center hover:bg-gray-200"
+                  onClick={() => setQuantity(quantity > 1 ? quantity - 1 : 1)}
+                  disabled={
+                    !currentVariation ||
+                    currentVariation.quantity <= 0 ||
+                    isAddingToCart
+                  }
+                >
+                  <span className="text-lg">−</span>
+                </button>
+                <input
+                  type="number"
+                  id="quantity"
+                  className="w-16 h-10 text-center border-y focus:outline-none"
+                  min="1"
+                  max={currentVariation?.quantity || 1}
+                  value={quantity}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    if (isNaN(val)) {
+                      setQuantity(1);
+                    } else if (val < 1) {
+                      setQuantity(1);
+                    } else if (
+                      currentVariation &&
+                      val > currentVariation.quantity
+                    ) {
+                      setQuantity(currentVariation.quantity);
+                    } else {
+                      setQuantity(val);
+                    }
+                  }}
+                  disabled={
+                    !currentVariation ||
+                    currentVariation.quantity <= 0 ||
+                    isAddingToCart
+                  }
+                />
+                <button
+                  type="button"
+                  className="w-10 h-10 bg-gray-100 rounded-r flex items-center justify-center hover:bg-gray-200"
+                  onClick={() => {
+                    if (currentVariation) {
+                      setQuantity(
+                        quantity < currentVariation.quantity
+                          ? quantity + 1
+                          : currentVariation.quantity,
+                      );
+                    }
+                  }}
+                  disabled={
+                    !currentVariation ||
+                    currentVariation.quantity <= 0 ||
+                    (currentVariation &&
+                      quantity >= currentVariation.quantity) ||
+                    isAddingToCart
+                  }
+                >
+                  <span className="text-lg">+</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Add to cart button */}
+            <button
+              className={`mt-3 w-full bg-black text-white py-2 rounded hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed ${
+                isAddingToCart ? "opacity-70" : ""
+              }`}
+              disabled={
+                !currentVariation ||
+                currentVariation.quantity <= 0 ||
+                isAddingToCart
               }
-            }}
-          >
-            Add to Cart
-          </button>
+              onClick={handleAddToCart}
+            >
+              {isAddingToCart ? "Adding to Cart..." : "Add to Cart"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

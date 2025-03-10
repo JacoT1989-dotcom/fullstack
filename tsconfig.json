@@ -30,7 +30,8 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "scripts/seed.js",
-    "prisma/**/*.ts"
+    "prisma/**/*.ts",
+    "app/(public)/productId/cart/_cart-actions"
   ],
   "exclude": ["node_modules"]
 }
