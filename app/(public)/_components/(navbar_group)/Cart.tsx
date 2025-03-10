@@ -4,9 +4,10 @@ interface CartProps {
   isOpen: boolean;
   onClose: () => void;
   cartRef: React.RefObject<HTMLDivElement>;
+  itemCount?: number;
 }
 
-const Cart = ({ isOpen, onClose, cartRef }: CartProps) => {
+const Cart = ({ isOpen, onClose, cartRef, itemCount = 0 }: CartProps) => {
   if (!isOpen) return null;
 
   return (
@@ -16,7 +17,9 @@ const Cart = ({ isOpen, onClose, cartRef }: CartProps) => {
     >
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-white">Your Cart</h2>
+          <h2 className="text-xl font-bold text-white">
+            Your Cart {itemCount > 0 && <span>({itemCount})</span>}
+          </h2>
           <button onClick={onClose} className="text-gray-300 hover:text-white">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -36,7 +39,12 @@ const Cart = ({ isOpen, onClose, cartRef }: CartProps) => {
           </button>
         </div>
         <div className="mt-8">
-          <p className="text-gray-300">Your cart is currently empty.</p>
+          {itemCount === 0 ? (
+            <p className="text-gray-300">Your cart is currently empty.</p>
+          ) : (
+            <p className="text-gray-300">Your cart items will appear here.</p>
+            // In a real implementation, you would render actual cart items here
+          )}
         </div>
       </div>
     </div>

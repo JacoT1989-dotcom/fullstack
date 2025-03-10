@@ -10,17 +10,49 @@ import MobileMenu from "./MobileMenu";
 import { MenuIcon, CartIcon } from "./NavIcons";
 import { getRoutes } from "./routes";
 import AuthModal from "@/app/(auth)/_components/AuthTabs";
+import { getCartCount } from "../../productId/cart/_cart-actions/get-cart-count";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
+  const [cartItemCount, setCartItemCount] = useState(0);
   const { user } = useSession();
 
   const mobileMenuRef = useRef<HTMLDivElement | null>(null);
   const cartMenuRef = useRef<HTMLDivElement | null>(null);
   const mobileMenuButtonRef = useRef<HTMLButtonElement | null>(null);
   const cartButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  // Fetch cart item count when component mounts and user is logged in
+  useEffect(() => {
+    const fetchCartCount = async () => {
+      if (!user) {
+        setCartItemCount(0);
+        return;
+      }
+
+      try {
+        const result = await getCartCount();
+        if (result.success) {
+          setCartItemCount(result.cartItemCount);
+        }
+      } catch (error) {
+        console.error("Failed to fetch cart count:", error);
+      }
+    };
+
+    fetchCartCount();
+
+    // Set up interval to periodically check for cart updates
+    // This is a simple approach; in a production app, you might use
+    // a more sophisticated approach like React Context or a state management library
+    const interval = setInterval(fetchCartCount, 30000); // Check every 30 seconds
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [user]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -102,8 +134,14 @@ export default function Navbar() {
                 ref={cartButtonRef}
                 onClick={() => setCartOpen(!cartOpen)}
                 className="ml-2 p-2 rounded-md text-gray-300 hover:text-white hover:bg-red-600/20"
+                aria-label={`Open cart containing ${cartItemCount} items`}
               >
                 <CartIcon />
+                {cartItemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                    {cartItemCount > 99 ? "99+" : cartItemCount}
+                  </span>
+                )}
                 <span className="sr-only">Open cart</span>
               </button>
             </div>
@@ -124,8 +162,14 @@ export default function Navbar() {
                 ref={cartButtonRef}
                 onClick={() => setCartOpen(!cartOpen)}
                 className="p-2 rounded-md text-gray-300 hover:text-white hover:bg-red-600/20"
+                aria-label={`Open cart containing ${cartItemCount} items`}
               >
                 <CartIcon />
+                {cartItemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                    {cartItemCount > 99 ? "99+" : cartItemCount}
+                  </span>
+                )}
                 <span className="sr-only">Open cart</span>
               </button>
             </div>
@@ -162,6 +206,7 @@ export default function Navbar() {
           isOpen={cartOpen}
           onClose={() => setCartOpen(false)}
           cartRef={cartMenuRef}
+          itemCount={cartItemCount}
         />
       )}
     </header>
