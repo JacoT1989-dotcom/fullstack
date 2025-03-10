@@ -9,6 +9,7 @@ import Cart from "./Cart";
 import MobileMenu from "./MobileMenu";
 import { MenuIcon, CartIcon } from "./NavIcons";
 import { getRoutes } from "./routes";
+import AuthModal from "@/app/(auth)/_components/AuthTabs";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -110,13 +111,7 @@ export default function Navbar() {
 
           {/* Auth Button */}
           <div className="ml-2 text-gray-300">
-            {!user ? (
-              <button className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition-colors">
-                Sign In
-              </button>
-            ) : (
-              <UserButton />
-            )}
+            {!user ? <AuthModal /> : <UserButton />}
           </div>
         </div>
 
@@ -138,13 +133,7 @@ export default function Navbar() {
 
           {/* Auth Button - Mobile */}
           <div className="text-gray-300">
-            {!user ? (
-              <button className="px-3 py-1 rounded-md bg-red-600 text-white hover:bg-red-700 transition-colors text-sm">
-                Sign In
-              </button>
-            ) : (
-              <UserButton />
-            )}
+            {!user ? <AuthModal /> : <UserButton />}
           </div>
 
           {/* Mobile Menu Trigger */}

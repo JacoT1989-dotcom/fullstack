@@ -15,9 +15,9 @@ const AuthModal = () => {
         <Button
           variant="ghost"
           size="icon"
-          className="hover:bg-red-700 hover:text-white rounded-full"
+          className="hover:bg-red-700 hover:text-white rounded-md w-[100px]"
         >
-          <UserCircle className="h-6 w-6" />
+          Sign In
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] p-0 overflow-hidden">
