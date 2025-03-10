@@ -57,7 +57,7 @@ const CartItemComponent = ({
         </Link>
         <p className="text-sm text-gray-400">{item.variation.name}</p>
         <div className="mt-2 flex justify-between items-center">
-          <div className="text-red-400">${item.variation.price.toFixed(2)}</div>
+          <div className="text-red-400">R{item.variation.price.toFixed(2)}</div>
 
           <div className="flex items-center gap-2">
             <button
@@ -206,7 +206,7 @@ const Cart = ({ isOpen, onClose, cartRef }: CartProps) => {
             <div className="flex justify-between mb-4">
               <span className="text-gray-300">Subtotal</span>
               <span className="text-white font-medium">
-                ${totalPrice.toFixed(2)}
+                R{totalPrice.toFixed(2)}
               </span>
             </div>
 
