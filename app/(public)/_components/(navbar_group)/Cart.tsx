@@ -1,37 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { CloseIcon } from "./NavIcons";
-import { getCartItems } from "../../productId/cart/_cart-actions/get-cart-items";
-import { updateCartItem } from "../../productId/cart/_cart-actions/update-cart";
-import { clearCart } from "../../productId/cart/_cart-actions/clear-cart";
-
-// Match this interface with your server action
-interface CartItemWithDetails {
-  id: string;
-  variationId: string;
-  quantity: number;
-  variation: {
-    id: string;
-    name: string;
-    price: number;
-    quantity: number;
-    imageUrl: string;
-    product: {
-      id: string;
-      productName: string; // Using productName instead of name
-      productImgUrl: string; // Using productImgUrl
-    };
-  };
-}
+import { useCart } from "../../productId/cart/_store/use-cart-store-hooks";
+import { CartItemWithDetails } from "../../productId/cart/_store/cart-store";
 
 interface CartProps {
   isOpen: boolean;
   onClose: () => void;
   cartRef: React.RefObject<HTMLDivElement>;
-  itemCount?: number;
 }
 
 const CartItemComponent = ({
@@ -71,7 +50,7 @@ const CartItemComponent = ({
 
       <div className="flex-grow">
         <Link
-          href={`/products/${item.variation.product.id}`} // Using product ID instead of slug
+          href={`/products/${item.variation.product.id}`}
           className="text-white hover:text-red-400 font-medium transition-colors"
         >
           {item.variation.product.productName}
@@ -129,120 +108,34 @@ const CartItemComponent = ({
   );
 };
 
-const Cart = ({ isOpen, onClose, cartRef, itemCount = 0 }: CartProps) => {
-  const [cartItems, setCartItems] = useState<CartItemWithDetails[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [isUpdating, setIsUpdating] = useState(false);
+const Cart = ({ isOpen, onClose, cartRef }: CartProps) => {
+  const {
+    items,
+    itemCount,
+    isLoading,
+    updateCartItem,
+    removeCartItem,
+    clearCart,
+    refreshCart,
+    totalPrice,
+    isEmpty,
+  } = useCart();
 
+  // Reference to track if this is the first time opening
+  const firstOpenRef = useRef(true);
+
+  // Only do a background refresh when opening the cart
   useEffect(() => {
-    const fetchCartItems = async () => {
-      if (!isOpen) return;
-
-      setIsLoading(true);
-      setError("");
-
-      try {
-        const result = await getCartItems();
-
-        if (result.success) {
-          setCartItems(result.items || []);
-        } else {
-          setError(result.message || "Failed to load cart items");
-        }
-      } catch (err) {
-        console.error("Error fetching cart:", err);
-        setError("Failed to load your cart. Please try again.");
-      } finally {
-        setIsLoading(false);
+    if (isOpen) {
+      // If this is the first open, do a background refresh
+      // This ensures we don't hit the server redundantly
+      if (firstOpenRef.current) {
+        firstOpenRef.current = false;
+        // Use false parameter to prevent loading state
+        refreshCart(false);
       }
-    };
-
-    fetchCartItems();
-  }, [isOpen]);
-
-  // Calculate total
-  const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.quantity * item.variation.price,
-    0,
-  );
-
-  const handleUpdateQuantity = async (itemId: string, newQuantity: number) => {
-    if (isUpdating) return;
-
-    try {
-      setIsUpdating(true);
-
-      const result = await updateCartItem({
-        cartItemId: itemId,
-        quantity: newQuantity,
-      });
-
-      if (result.success) {
-        // Update the local state to reflect changes immediately
-        setCartItems((prevItems) =>
-          prevItems.map((item) =>
-            item.id === itemId ? { ...item, quantity: newQuantity } : item,
-          ),
-        );
-      } else {
-        setError(result.message || "Failed to update quantity");
-      }
-    } catch (err) {
-      console.error("Error updating cart:", err);
-      setError("Failed to update item. Please try again.");
-    } finally {
-      setIsUpdating(false);
     }
-  };
-
-  const handleRemoveItem = async (itemId: string) => {
-    if (isUpdating) return;
-
-    try {
-      setIsUpdating(true);
-
-      const result = await updateCartItem({
-        cartItemId: itemId,
-        quantity: 0, // Setting to 0 removes the item
-      });
-
-      if (result.success) {
-        // Remove item from local state immediately
-        setCartItems((prevItems) =>
-          prevItems.filter((item) => item.id !== itemId),
-        );
-      } else {
-        setError(result.message || "Failed to remove item");
-      }
-    } catch (err) {
-      console.error("Error removing item:", err);
-      setError("Failed to remove item. Please try again.");
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
-  const handleClearCart = async () => {
-    if (isUpdating) return;
-
-    try {
-      setIsUpdating(true);
-
-      const result = await clearCart();
-
-      if (result.success) {
-        setCartItems([]);
-      } else {
-        setError(result.message || "Failed to clear cart");
-      }
-    } catch (err) {
-      console.error("Error clearing cart:", err);
-      setError("Failed to clear cart. Please try again.");
-    } finally {
-      setIsUpdating(false);
-    }
-  };
+  }, [isOpen, refreshCart]);
 
   if (!isOpen) return null;
 
@@ -270,32 +163,33 @@ const Cart = ({ isOpen, onClose, cartRef, itemCount = 0 }: CartProps) => {
       {/* Cart Content */}
       <div className="flex-grow overflow-y-auto">
         <div className="p-6">
-          {isLoading ? (
-            <div className="flex justify-center items-center h-20">
-              <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-red-500"></div>
+          {/* Only show loading indicator during explicit loading operations (not on open) */}
+          {isLoading && (
+            <div className="absolute inset-0 bg-black bg-opacity-50 flex justify-center items-center z-10">
+              <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-red-500"></div>
             </div>
-          ) : error ? (
-            <div className="text-red-400 text-center py-4">{error}</div>
-          ) : cartItems.length === 0 ? (
+          )}
+
+          {isEmpty ? (
             <div className="text-gray-300 text-center py-4">
               Your cart is currently empty.
             </div>
           ) : (
             <>
-              {cartItems.map((item) => (
+              {items.map((item: CartItemWithDetails) => (
                 <CartItemComponent
                   key={item.id}
                   item={item}
-                  onUpdateQuantity={handleUpdateQuantity}
-                  onRemove={handleRemoveItem}
+                  onUpdateQuantity={updateCartItem}
+                  onRemove={removeCartItem}
                 />
               ))}
 
-              {cartItems.length > 0 && (
+              {items.length > 0 && (
                 <button
-                  onClick={handleClearCart}
+                  onClick={clearCart}
                   className="mt-4 w-full py-2 text-sm text-red-400 hover:text-red-300 transition-colors"
-                  disabled={isUpdating}
+                  disabled={isLoading}
                 >
                   Clear Cart
                 </button>
@@ -307,12 +201,12 @@ const Cart = ({ isOpen, onClose, cartRef, itemCount = 0 }: CartProps) => {
 
       {/* Footer with totals and checkout button */}
       <div className="p-6 border-t border-gray-800">
-        {cartItems.length > 0 && (
+        {!isEmpty && (
           <>
             <div className="flex justify-between mb-4">
               <span className="text-gray-300">Subtotal</span>
               <span className="text-white font-medium">
-                ${subtotal.toFixed(2)}
+                ${totalPrice.toFixed(2)}
               </span>
             </div>
 
