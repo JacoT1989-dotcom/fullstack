@@ -13,6 +13,7 @@ import OrderSummary from "./OrderSummary";
 
 // Custom hooks
 import { useCart } from "../productId/cart/_store/use-cart-store-hooks";
+import { useCartStore } from "../productId/cart/_store/cart-store";
 
 // Types and validations
 import { OrderInput } from "./order-types";
@@ -66,6 +67,20 @@ export default function Checkout() {
 
       if (result.success) {
         toast.success("Order placed successfully!");
+
+        // IMPORTANT: Explicitly update the cart state to reflect the empty cart
+        // This ensures that both the cart badge and sidebar are updated immediately
+        const cartStore = useCartStore.getState();
+
+        // First update the state directly for immediate UI feedback
+        cartStore.setItems([]);
+        cartStore.setItemCount(0);
+        cartStore.setLastUpdated(Date.now());
+
+        // Then do a background refresh to ensure everything is in sync
+        setTimeout(() => {
+          cartStore.refreshCart(false);
+        }, 300);
 
         // Redirect to order confirmation page
         if (result.orderId) {

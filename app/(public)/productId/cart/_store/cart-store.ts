@@ -40,6 +40,11 @@ interface CartState {
   lastUpdated: number; // Timestamp of last data refresh
   isBackgroundFetching: boolean; // For background data refreshes
 
+  // Direct state setters
+  setItems: (items: CartItemWithDetails[]) => void;
+  setItemCount: (count: number) => void;
+  setLastUpdated: (timestamp: number) => void;
+
   // Actions
   initializeCart: () => Promise<void>;
   addToCart: (variationId: string, quantity: number) => Promise<void>;
@@ -69,6 +74,11 @@ export const useCartStore = create<CartState>()(
       isInitializing: false,
       lastUpdated: 0,
       isBackgroundFetching: false,
+
+      // Direct state setters
+      setItems: (items) => set({ items }),
+      setItemCount: (count) => set({ itemCount: count }),
+      setLastUpdated: (timestamp) => set({ lastUpdated: timestamp }),
 
       // Initialize cart from server
       initializeCart: async () => {
@@ -111,7 +121,7 @@ export const useCartStore = create<CartState>()(
         }
       },
 
-      // Add item to cart
+      // Add item to cart - MODIFIED for immediate updates
       addToCart: async (variationId, quantity) => {
         // Ensure cart is initialized
         if (!get().isInitialized) {
@@ -124,11 +134,21 @@ export const useCartStore = create<CartState>()(
 
           if (response.success) {
             toast.success(response.message);
+
+            // Immediately update the item count first
             if (response.cartItemCount !== undefined) {
               set({ itemCount: response.cartItemCount });
             }
-            // Refresh in background without showing loading state
-            get().refreshCart(false);
+
+            // IMPORTANT: Always fetch the latest items after adding to cart
+            // Don't use the background refresh - use explicit refresh
+            const itemsResponse = await getCartItemsAction();
+            if (itemsResponse.success) {
+              set({
+                items: itemsResponse.items,
+                lastUpdated: Date.now(),
+              });
+            }
           } else {
             toast.error(response.message);
           }
@@ -174,6 +194,15 @@ export const useCartStore = create<CartState>()(
             if (response.cartItemCount !== undefined) {
               set({
                 itemCount: response.cartItemCount,
+                lastUpdated: Date.now(),
+              });
+            }
+
+            // Fetch the latest items to ensure UI consistency
+            const itemsResponse = await getCartItemsAction();
+            if (itemsResponse.success) {
+              set({
+                items: itemsResponse.items,
                 lastUpdated: Date.now(),
               });
             }
@@ -234,19 +263,10 @@ export const useCartStore = create<CartState>()(
         }
       },
 
-      // Refresh cart data from server - with smart background refresh
+      // Refresh cart data from server - MODIFIED to be more aggressive on refreshes
       refreshCart: async (showLoading = true) => {
         // Skip if already loading in the foreground
         if (get().isLoading) return;
-
-        // Check if data is fresh enough (within threshold)
-        const now = Date.now();
-        const isFresh = now - get().lastUpdated < DATA_FRESHNESS_THRESHOLD;
-
-        // If we already have items and data is fresh, don't refresh at all
-        if (get().items.length > 0 && isFresh) {
-          return; // Skip refresh for fresh data
-        }
 
         // Set loading state only if showLoading is true
         if (showLoading) {
@@ -256,30 +276,7 @@ export const useCartStore = create<CartState>()(
         }
 
         try {
-          // If we have some items, prioritize a faster UI by using the count endpoint first
-          if (get().items.length > 0) {
-            const countResponse = await getCartCountAction();
-
-            // If the count matches what we have, we can skip fetching details
-            const currentCount = get().items.reduce(
-              (total, item) => total + item.quantity,
-              0,
-            );
-
-            if (
-              countResponse.success &&
-              countResponse.cartItemCount === currentCount
-            ) {
-              // Count matches, we can trust our local data
-              set({
-                itemCount: countResponse.cartItemCount,
-                lastUpdated: now,
-              });
-              return; // Skip the items fetch
-            }
-          }
-
-          // Otherwise fetch both count and items
+          // Always fetch both count and items for consistency
           const [countResponse, itemsResponse] = await Promise.all([
             getCartCountAction(),
             getCartItemsAction(),
@@ -289,7 +286,7 @@ export const useCartStore = create<CartState>()(
             set({
               items: itemsResponse.items,
               itemCount: countResponse.cartItemCount,
-              lastUpdated: now,
+              lastUpdated: Date.now(),
             });
           }
         } catch (error) {

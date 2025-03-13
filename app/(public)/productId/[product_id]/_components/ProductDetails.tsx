@@ -193,6 +193,23 @@ export default function ProductDetails({
           duration: 3000,
         });
 
+        // Force refresh the cart state to ensure UI updates immediately
+        // This ensures the cart count badge in the navbar updates right away
+        try {
+          // We're importing and using the cart store directly
+          if (typeof window !== "undefined") {
+            // Only run on client side
+            import("../../../productId/cart/_store/cart-store")
+              .then((module) => {
+                const cartStore = module.useCartStore;
+                cartStore.getState().refreshCart(true);
+              })
+              .catch((e) => console.error("Error importing cart store:", e));
+          }
+        } catch (e) {
+          console.error("Error refreshing cart:", e);
+        }
+
         // Not resetting quantity to 1 here to preserve the user's selection
       } else {
         toast.error(result.message);
@@ -204,7 +221,6 @@ export default function ProductDetails({
       setIsAddingToCart(false);
     }
   };
-
   // Check loading, error, and not found states
   const showStatus = !isStoreReady || isLoading || error || !product;
   if (showStatus) {
