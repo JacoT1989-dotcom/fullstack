@@ -41,5 +41,13 @@ export interface CartItemWithVariation {
     price: number;
     quantity: number;
     productId: string;
+    color: string;
+    size: string;
+    imageUrl: string;
+    product: {
+      id: string;
+      productName: string;
+      productImgUrl: string;
+    };
   };
 }

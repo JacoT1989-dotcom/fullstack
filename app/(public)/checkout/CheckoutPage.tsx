@@ -9,8 +9,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ChevronDown, X } from "lucide-react";
 
-// Custom hooks
-
 // Components
 import {
   Form,
@@ -36,7 +34,7 @@ import { OrderInput } from "./order-types";
 import { orderValidationSchema } from "./order-validations";
 import { placeOrder } from "./checkout-order";
 
-export default function Checkout() {
+export default function CheckoutPage() {
   const router = useRouter();
   const { items, itemCount, totalPrice, isLoading } = useCart();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -579,8 +577,7 @@ export default function Checkout() {
                           {item.variation.product.productName}
                         </h3>
                         <p className="text-gray-600 text-sm">
-                          Size: {item.variation.size}, Color:{" "}
-                          {item.variation.color}
+                          {item.variation.name}
                         </p>
 
                         <div className="flex items-center mt-1 justify-between">
@@ -589,6 +586,8 @@ export default function Checkout() {
                               className="border rounded h-7 text-sm"
                               value={item.quantity}
                               disabled
+                              aria-label={`Quantity for ${item.variation.product.productName}`}
+                              title="Quantity"
                             >
                               <option>{item.quantity}</option>
                             </select>
