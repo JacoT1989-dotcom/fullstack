@@ -24,43 +24,44 @@ export const navigation: NavItem[] = [
     links: [
       { name: "Create", href: "/admin/products/create" },
       { name: "Update", href: "/admin/products/update" },
-      { name: "Collections", href: "/products/collections" },
+      { name: "Collections", href: "/admin/products/collections" },
     ],
   },
   {
     label: "Customers",
     icon: Users,
     links: [
-      { name: "Overview", href: "/customers/overview" },
-      { name: "Management", href: "/customers/management" },
-      { name: "Analytics", href: "/customers/analytics" },
+      { name: "Orders", href: "/admin/customers/orders" },
+      { name: "Overview", href: "/admin/customers/overview" },
+      { name: "Management", href: "/admin/customers/management" },
+      { name: "Analytics", href: "/admin/customers/analytics" },
     ],
   },
   {
     label: "Reports",
     icon: FileText,
     links: [
-      { name: "Sales", href: "/reports/sales" },
-      { name: "Inventory", href: "/reports/inventory" },
-      { name: "Performance", href: "/reports/performance" },
+      { name: "Sales", href: "/admin/reports/sales" },
+      { name: "Inventory", href: "/admin/reports/inventory" },
+      { name: "Performance", href: "/admin/reports/performance" },
     ],
   },
   {
     label: "Analytics",
     icon: BarChart3,
     links: [
-      { name: "Dashboard", href: "/analytics/dashboard" },
-      { name: "Metrics", href: "/analytics/metrics" },
-      { name: "Forecasts", href: "/analytics/forecasts" },
+      { name: "Dashboard", href: "/admin/analytics/dashboard" },
+      { name: "Metrics", href: "/admin/analytics/metrics" },
+      { name: "Forecasts", href: "/admin/analytics/forecasts" },
     ],
   },
   {
     label: "Settings",
     icon: Settings,
     links: [
-      { name: "General", href: "/settings/general" },
-      { name: "Security", href: "/settings/security" },
-      { name: "Preferences", href: "/settings/preferences" },
+      { name: "General", href: "/admin/settings/general" },
+      { name: "Security", href: "/admin/settings/security" },
+      { name: "Preferences", href: "/admin/settings/preferences" },
     ],
   },
 ];
