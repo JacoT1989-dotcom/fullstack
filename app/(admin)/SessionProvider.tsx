@@ -61,11 +61,8 @@ export default function SessionProvider({
 
   // Set up auto logout timer (2 hours)
   useEffect(() => {
-    const timer = setTimeout(() => {
-      console.log("Session timeout - logging out");
-      logout();
-    }, 7200000); // 2 hours (2 * 60 * 60 * 1000 milliseconds)
-
+    const timer = setTimeout(() => {}, 7200000); // 2 hours (2 * 60 * 60 * 1000 milliseconds)
+    logout();
     // Cleanup the timer when component unmounts
     return () => clearTimeout(timer);
   }, []);
