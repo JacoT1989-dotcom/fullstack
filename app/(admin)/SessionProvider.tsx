@@ -1,7 +1,8 @@
 "use client";
 
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useEffect } from "react";
 import { Session as LuciaSession } from "lucia";
+import { logout } from "../(auth)/actions";
 
 // Define the UserRole enum to match Prisma
 export type UserRole =
@@ -57,6 +58,17 @@ export default function SessionProvider({
       user: value.user,
     },
   };
+
+  // Set up auto logout timer (2 hours)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      console.log("Session timeout - logging out");
+      logout();
+    }, 7200000); // 2 hours (2 * 60 * 60 * 1000 milliseconds)
+
+    // Cleanup the timer when component unmounts
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <SessionContext.Provider value={sessionValue}>
