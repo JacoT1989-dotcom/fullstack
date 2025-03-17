@@ -6,15 +6,23 @@ import Image from "next/image";
 import { User as UserIcon } from "lucide-react";
 import { ProfileSectionProps } from "./types";
 import ProfileEditModal from "./ProfileEditModal";
+import AvatarUploadForm from "./AvatarUploadForm";
 
 export default function ProfileSection({
   user,
   isCollapsed,
 }: ProfileSectionProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentAvatarUrl, setCurrentAvatarUrl] = useState<string | null>(
+    user.avatarUrl || null,
+  );
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
+
+  const handleAvatarUpdateSuccess = (newAvatarUrl: string) => {
+    setCurrentAvatarUrl(newAvatarUrl);
+  };
 
   return (
     <div
@@ -25,9 +33,9 @@ export default function ProfileSection({
         <div
           className={`${isCollapsed ? "h-12 w-12" : "h-24 w-24"} rounded-full overflow-hidden bg-slate-600 mb-3 transition-all duration-300 border-2 border-white relative mt-5`}
         >
-          {user.avatarUrl ? (
+          {currentAvatarUrl ? (
             <Image
-              src={user.avatarUrl}
+              src={currentAvatarUrl}
               alt={user.displayName || "User"}
               width={isCollapsed ? 48 : 96}
               height={isCollapsed ? 48 : 96}
@@ -86,45 +94,11 @@ export default function ProfileSection({
 
       {/* Profile Edit Modal */}
       <ProfileEditModal isOpen={isModalOpen} onClose={closeModal}>
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">
-            Edit Profile Picture
-          </h2>
-          <div className="mb-6 mx-auto w-32 h-32 relative">
-            {user.avatarUrl ? (
-              <Image
-                src={user.avatarUrl}
-                alt={user.displayName || "User"}
-                width={128}
-                height={128}
-                className="rounded-full w-full h-full object-cover border-4 border-teal-500"
-              />
-            ) : (
-              <div className="h-full w-full flex items-center justify-center bg-slate-600 rounded-full border-4 border-teal-500">
-                <UserIcon size={64} className="text-slate-300" />
-              </div>
-            )}
-          </div>
-
-          <div className="mb-6">
-            <label className="w-full py-3 px-3 bg-teal-500 text-white rounded text-center font-medium hover:bg-teal-400 transition cursor-pointer block">
-              Upload New Image
-              <input type="file" accept="image/*" className="hidden" />
-            </label>
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              onClick={closeModal}
-              className="w-1/2 py-3 px-3 bg-slate-200 rounded text-slate-800 text-center font-medium hover:bg-slate-300 transition"
-            >
-              Cancel
-            </button>
-            <button className="w-1/2 py-3 px-3 bg-teal-500 rounded text-white text-center font-medium hover:bg-teal-400 transition">
-              Save
-            </button>
-          </div>
-        </div>
+        <AvatarUploadForm
+          avatarUrl={currentAvatarUrl}
+          onSuccess={handleAvatarUpdateSuccess}
+          onClose={closeModal}
+        />
       </ProfileEditModal>
     </div>
   );
