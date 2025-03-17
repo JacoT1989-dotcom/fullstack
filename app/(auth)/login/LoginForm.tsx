@@ -55,7 +55,14 @@ const LoginForm = () => {
       }
 
       if (result?.redirectTo) {
-        toast.success("Logged in successfully!");
+        // Check if the redirect path is for USER role
+        if (result.redirectTo === "/register-success") {
+          toast.success(
+            "Your User upgrade is still pending. Please contact support.",
+          );
+        } else {
+          toast.success("Logged in successfully!");
+        }
         router.push(result.redirectTo);
         return;
       }
