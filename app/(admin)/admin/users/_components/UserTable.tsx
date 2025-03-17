@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image"; // Changed from direct img
+import Image from "next/image";
 import { UserRole } from "@prisma/client";
 import {
   ChevronDown,
@@ -10,6 +10,7 @@ import {
   Trash2,
   UserCog,
   Shield,
+  Filter,
 } from "lucide-react";
 import type { AdminUsersTableProps, User } from "./types";
 import { updateUserRole } from "../_actions/updateUserRole";
@@ -21,6 +22,7 @@ export default function AdminUsersTable({ users }: AdminUsersTableProps) {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [currentUsers, setCurrentUsers] = useState<User[]>(users);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [roleFilter, setRoleFilter] = useState<UserRole | "ALL">("ALL");
 
   // Handle sorting
   const handleSort = (field: keyof User | "name") => {
@@ -79,13 +81,18 @@ export default function AdminUsersTable({ users }: AdminUsersTableProps) {
   const filteredUsers = currentUsers
     .filter((user) => {
       const searchLower = searchTerm.toLowerCase();
-      return (
+      const matchesSearch =
         (user.firstName?.toLowerCase() || "").includes(searchLower) ||
         (user.lastName?.toLowerCase() || "").includes(searchLower) ||
         (user.email?.toLowerCase() || "").includes(searchLower) ||
         (user.username?.toLowerCase() || "").includes(searchLower) ||
-        (user.role?.toLowerCase() || "").includes(searchLower)
-      );
+        (user.role?.toLowerCase() || "").includes(searchLower);
+
+      // Apply role filter if it's not "ALL"
+      const matchesRoleFilter =
+        roleFilter === "ALL" || user.role === roleFilter;
+
+      return matchesSearch && matchesRoleFilter;
     })
     .sort((a, b) => {
       // Handle sorting for name field separately
@@ -142,17 +149,43 @@ export default function AdminUsersTable({ users }: AdminUsersTableProps) {
     <div className="bg-white shadow rounded-lg overflow-hidden">
       {/* Search and filters */}
       <div className="p-4 border-b border-gray-200">
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400" />
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-grow">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search users..."
+              className="pl-10 pr-4 py-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
-          <input
-            type="text"
-            placeholder="Search users..."
-            className="pl-10 pr-4 py-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+          <div className="relative w-full md:w-64">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Filter className="h-5 w-5 text-gray-400" />
+            </div>
+            <select
+              className="pl-10 pr-4 py-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent appearance-none"
+              value={roleFilter}
+              onChange={(e) =>
+                setRoleFilter(e.target.value as UserRole | "ALL")
+              }
+              aria-label="Filter by role"
+            >
+              <option value="ALL">All Roles</option>
+              <option value={UserRole.USER}>User</option>
+              <option value={UserRole.CUSTOMER}>Customer</option>
+              <option value={UserRole.PROCUSTOMER}>Pro Customer</option>
+              <option value={UserRole.EDITOR}>Editor</option>
+              <option value={UserRole.ADMIN}>Admin</option>
+              <option value={UserRole.SUPERADMIN}>SuperAdmin</option>
+            </select>
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+              <ChevronDown className="h-4 w-4 text-gray-400" />
+            </div>
+          </div>
         </div>
       </div>
 
