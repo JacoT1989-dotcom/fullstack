@@ -1,5 +1,5 @@
 "use client";
-
+// admin session provider
 import React, { createContext, useContext, useEffect } from "react";
 import { Session as LuciaSession } from "lucia";
 import { logout } from "../(auth)/actions";
@@ -61,8 +61,10 @@ export default function SessionProvider({
 
   // Set up auto logout timer (2 hours)
   useEffect(() => {
-    const timer = setTimeout(() => {}, 7200000); // 2 hours (2 * 60 * 60 * 1000 milliseconds)
-    logout();
+    const timer = setTimeout(() => {
+      logout();
+    }, 7200000); // 2 hours (2 * 60 * 60 * 1000 milliseconds)
+
     // Cleanup the timer when component unmounts
     return () => clearTimeout(timer);
   }, []);

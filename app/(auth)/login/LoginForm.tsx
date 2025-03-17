@@ -55,14 +55,16 @@ const LoginForm = () => {
       }
 
       if (result?.redirectTo) {
-        // Check if the redirect path is for USER role
-        if (result.redirectTo === "/register-success") {
-          toast.success(
-            "Your User upgrade is still pending. Please contact support.",
-          );
+        // Check if session was created or if it's the USER role path
+        if (result.redirectTo === "/register-success" || !result.sessionCreated) {
+          toast.success("Registration successful! Please complete your profile.");
         } else {
           toast.success("Logged in successfully!");
+          
+          // Add a small delay before redirecting to ensure session is fully established
+          await new Promise(resolve => setTimeout(resolve, 300));
         }
+        
         router.push(result.redirectTo);
         return;
       }

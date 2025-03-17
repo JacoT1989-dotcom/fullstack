@@ -19,7 +19,11 @@ const roleRoutes: Record<UserRole, string> = {
 
 export async function login(
   credentials: LoginFormValues,
-): Promise<{ error?: string; redirectTo?: string } | void> {
+): Promise<{
+  error?: string;
+  redirectTo?: string;
+  sessionCreated?: boolean;
+} | void> {
   try {
     const { email, password } = credentials;
 
@@ -57,25 +61,37 @@ export async function login(
       };
     }
 
-    ////////////////////// THIS IS THE PART WHERE THE FUNCTION IS IN A POSITIVE STATE//////////
+    let sessionCreated = false;
 
     // Only create session if the user role is NOT UserRole.USER
     if (existingUser.role !== UserRole.USER) {
-      // Create session in the database
-      const dbSession = await prisma.session.create({
-        data: {
-          id: crypto.randomUUID(),
-          userId: existingUser.id,
-          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days, 24 HOURS, 60 SEC, 60 MIN, 1000 MIL SEC
-        },
-      });
+      try {
+        // Create session in the database
+        const dbSession = await prisma.session.create({
+          data: {
+            id: crypto.randomUUID(),
+            userId: existingUser.id,
+            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+          },
+        });
 
-      const sessionCookie = lucia.createSessionCookie(dbSession.id);
-      cookies().set(
-        sessionCookie.name,
-        sessionCookie.value,
-        sessionCookie.attributes,
-      );
+        const sessionCookie = lucia.createSessionCookie(dbSession.id);
+        cookies().set(
+          sessionCookie.name,
+          sessionCookie.value,
+          sessionCookie.attributes,
+        );
+
+        // Add a small delay to ensure session is properly set
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        sessionCreated = true;
+      } catch (sessionError) {
+        console.error("Session creation error:", sessionError);
+        return {
+          error: "Failed to create session. Please try again.",
+        };
+      }
     }
 
     const redirectPath = roleRoutes[existingUser.role];
@@ -87,6 +103,7 @@ export async function login(
 
     return {
       redirectTo: redirectPath,
+      sessionCreated,
     };
   } catch (error) {
     if (isRedirectError(error)) throw error;
