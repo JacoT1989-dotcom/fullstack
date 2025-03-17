@@ -19,6 +19,11 @@ import {
 
 export const navigation: NavItem[] = [
   {
+    label: "App Users",
+    icon: ShoppingCart,
+    links: [{ name: "Access Control", href: "/admin/users/access" }],
+  },
+  {
     label: "Products",
     icon: ShoppingCart,
     links: [
