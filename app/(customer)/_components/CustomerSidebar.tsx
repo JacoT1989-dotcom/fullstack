@@ -12,11 +12,13 @@ import { SessionUser } from "@/app/SessionProvider";
 interface CustomerSidebarProps {
   user: SessionUser;
   orderCount: number;
+  wishlistCount: number;
 }
 
 export default function CustomerSidebar({
   user,
   orderCount,
+  wishlistCount,
 }: CustomerSidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -43,7 +45,9 @@ export default function CustomerSidebar({
         <ProfileSection user={user} isCollapsed={isCollapsed} />
 
         {/* Stats Section */}
-        {!isCollapsed && <StatsSection orderCount={orderCount} />}
+        {!isCollapsed && (
+          <StatsSection orderCount={orderCount} wishlistCount={wishlistCount} />
+        )}
 
         {/* Navigation Links */}
         <NavigationLinks isCollapsed={isCollapsed} />
