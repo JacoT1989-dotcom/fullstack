@@ -5,6 +5,7 @@ import Image from "next/image";
 import { User as UserIcon } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { uploadAvatar } from "./_profile-actions/profile-upload";
+import { useSession } from "../../SessionProvider";
 
 interface AvatarUploadFormProps {
   avatarUrl: string | null;
@@ -21,6 +22,7 @@ export default function AvatarUploadForm({
   const [previewUrl, setPreviewUrl] = useState<string | null>(avatarUrl);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { updateAvatar } = useSession();
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
@@ -57,6 +59,10 @@ export default function AvatarUploadForm({
 
       // Call the success callback with the new URL
       onSuccess(result.avatarUrl);
+
+      // Update the avatar in the session context
+      updateAvatar(result.avatarUrl);
+
       toast.success("Avatar updated successfully");
       onClose();
     } catch (error) {

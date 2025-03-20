@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useState } from "react";
 import { Session as LuciaSession } from "lucia";
 
 // Define the UserRole enum to match Prisma
@@ -31,10 +31,11 @@ export interface SessionWithUser extends LuciaSession {
   user: SessionUser;
 }
 
-// Define the context interface
+// Define the context interface with updateAvatar function
 interface SessionContext {
   user: SessionUser;
   session: SessionWithUser;
+  updateAvatar: (newAvatarUrl: string) => void;
 }
 
 const SessionContext = createContext<SessionContext | null>(null);
@@ -49,13 +50,25 @@ export default function SessionProvider({
     session: LuciaSession;
   };
 }) {
+  // Use state to store the user data so we can update it
+  const [userData, setUserData] = useState<SessionUser>(value.user);
+
+  // Function to update avatar URL in the session context
+  const updateAvatar = (newAvatarUrl: string) => {
+    setUserData((prevUser) => ({
+      ...prevUser,
+      avatarUrl: newAvatarUrl,
+    }));
+  };
+
   // Transform the value to match our SessionContext type
   const sessionValue: SessionContext = {
-    user: value.user,
+    user: userData,
     session: {
       ...value.session,
-      user: value.user,
+      user: userData,
     },
+    updateAvatar,
   };
 
   return (
