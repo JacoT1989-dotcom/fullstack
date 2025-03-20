@@ -1,16 +1,40 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface MobileMenuProps {
   isOpen: boolean;
   onClose: () => void;
   menuRef: React.RefObject<HTMLDivElement>;
   routes: { name: string; path: string }[];
+  dashboardUrl?: string;
 }
 
-const MobileMenu = ({ isOpen, onClose, menuRef, routes }: MobileMenuProps) => {
+const MobileMenu = ({
+  isOpen,
+  onClose,
+  menuRef,
+  routes,
+  dashboardUrl = "/customer",
+}: MobileMenuProps) => {
+  const pathname = usePathname();
+
   if (!isOpen) return null;
+
+  const handleDashboardClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    onClose();
+
+    // Check if we're already on the dashboard page
+    if (pathname === dashboardUrl) {
+      // If already on dashboard, perform a hard window reload
+      window.location.reload();
+    } else {
+      // If coming from a different page, navigate to dashboard with hard navigation
+      window.location.href = dashboardUrl;
+    }
+  };
 
   return (
     <div
@@ -39,17 +63,29 @@ const MobileMenu = ({ isOpen, onClose, menuRef, routes }: MobileMenuProps) => {
           </button>
         </div>
         <div className="flex flex-col gap-4 mt-8">
-          {routes.map((route) => (
-            <Link
-              key={route.path}
-              href={route.path}
-              onClick={onClose}
-              className="px-4 py-3 rounded-md text-gray-300 transition-all duration-300
-                hover:text-white hover:bg-gradient-to-r hover:from-red-500 hover:to-red-700"
-            >
-              {route.name}
-            </Link>
-          ))}
+          {routes.map((route) =>
+            route.name === "My Dashboard" ? (
+              <a
+                key={route.path}
+                href={dashboardUrl}
+                onClick={handleDashboardClick}
+                className="px-4 py-3 rounded-md text-gray-300 transition-all duration-300
+                  hover:text-white hover:bg-gradient-to-r hover:from-red-500 hover:to-red-700"
+              >
+                {route.name}
+              </a>
+            ) : (
+              <Link
+                key={route.path}
+                href={route.path}
+                onClick={onClose}
+                className="px-4 py-3 rounded-md text-gray-300 transition-all duration-300
+                  hover:text-white hover:bg-gradient-to-r hover:from-red-500 hover:to-red-700"
+              >
+                {route.name}
+              </Link>
+            ),
+          )}
         </div>
       </div>
     </div>

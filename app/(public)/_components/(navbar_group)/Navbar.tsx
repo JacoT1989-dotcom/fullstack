@@ -11,8 +11,10 @@ import { MenuIcon, CartIcon } from "./NavIcons";
 import { getRoutes } from "./routes";
 import AuthModal from "@/app/(auth)/_components/AuthTabs";
 import { useCart } from "../../productId/cart/_store/use-cart-store-hooks";
+import { usePathname } from "next/navigation";
 
 export default function Navbar() {
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
@@ -23,9 +25,6 @@ export default function Navbar() {
   const cartMenuRef = useRef<HTMLDivElement | null>(null);
   const mobileMenuButtonRef = useRef<HTMLButtonElement | null>(null);
   const cartButtonRef = useRef<HTMLButtonElement | null>(null);
-
-  // No need to fetch cart count - it comes from the useCart hook which
-  // handles initialization and updates automatically
 
   useEffect(() => {
     const handleScroll = () => {
@@ -67,6 +66,20 @@ export default function Navbar() {
 
   const routes = getRoutes();
 
+  // This function handles dashboard navigation with a hard refresh
+  const handleDashboardClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+
+    // Check if we're already on the dashboard page
+    if (pathname === "/customer") {
+      // If already on dashboard, perform a hard window reload
+      window.location.reload();
+    } else {
+      // If coming from a different page, navigate to dashboard with hard navigation
+      window.location.href = "/customer";
+    }
+  };
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -88,17 +101,30 @@ export default function Navbar() {
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-4">
-          {routes.map((route) => (
-            <Link
-              key={route.path}
-              href={route.path}
-              className="px-4 py-2 rounded-md text-gray-300 transition-all duration-300 
-                hover:text-white hover:bg-gradient-to-r hover:from-red-500 hover:to-red-700 
-                hover:scale-105 font-medium"
-            >
-              {route.name}
-            </Link>
-          ))}
+          {routes.map((route) =>
+            route.name === "My Dashboard" ? (
+              <a
+                key={route.path}
+                href="/customer"
+                onClick={handleDashboardClick}
+                className="px-4 py-2 rounded-md text-gray-300 transition-all duration-300 
+                  hover:text-white hover:bg-gradient-to-r hover:from-red-500 hover:to-red-700 
+                  hover:scale-105 font-medium"
+              >
+                {route.name}
+              </a>
+            ) : (
+              <Link
+                key={route.path}
+                href={route.path}
+                className="px-4 py-2 rounded-md text-gray-300 transition-all duration-300 
+                  hover:text-white hover:bg-gradient-to-r hover:from-red-500 hover:to-red-700 
+                  hover:scale-105 font-medium"
+              >
+                {route.name}
+              </Link>
+            ),
+          )}
 
           {/* Cart Icon for logged-in users - Desktop */}
           {user && (
@@ -169,6 +195,7 @@ export default function Navbar() {
             onClose={() => setMobileMenuOpen(false)}
             menuRef={mobileMenuRef}
             routes={routes}
+            dashboardUrl="/customer"
           />
         </div>
       </nav>
