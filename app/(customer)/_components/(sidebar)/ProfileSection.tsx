@@ -78,16 +78,19 @@ export default function ProfileSection({
           </h2>
 
           <div className="flex gap-3 mt-4 w-full">
-            <Link href="/customer/profile" className="block w-1/2">
-              <button className="w-full py-3 px-3 bg-teal-500 rounded text-center font-medium hover:bg-teal-400 transition">
-                View
-              </button>
-            </Link>
-            <Link href="/customer/profile/edit" className="block w-1/2">
-              <button className="w-full py-3 px-3 bg-slate-600 rounded text-center font-medium hover:bg-slate-500 transition">
-                Edit
-              </button>
-            </Link>
+            <button
+              onClick={openModal}
+              className="w-full py-3 px-3 bg-teal-500 rounded text-center font-medium hover:bg-teal-400 transition"
+            >
+              View
+            </button>
+
+            <button
+              onClick={openModal}
+              className="w-full py-3 px-3 bg-slate-600 rounded text-center font-medium hover:bg-slate-500 transition"
+            >
+              Edit
+            </button>
           </div>
         </>
       )}
