@@ -9,10 +9,11 @@ model Variation {
     price    Float // Price specific to this variation
     imageUrl String // Image URL for this variation
 
-    productId String
-    product   Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
-    CartItem  CartItem[]
-    OrderItem OrderItem[]
+    productId    String
+    product      Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+    CartItem     CartItem[]
+    OrderItem    OrderItem[]
+    WishlistItem WishlistItem[] // Relation to wishlist items
 
     @@map("variations")
 }

@@ -24,8 +24,9 @@ model User {
     OnSale                 OnSale[]
     NewsletterSubscription NewsletterSubscription[]
     Audio                  Audio[]
-    Cart                   Cart?
     Order                  Order[]
+    Cart                   Cart?
+    Wishlist               Wishlist? // Relation to user's wishlist
 
     @@map("users")
 }
