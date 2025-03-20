@@ -3,12 +3,21 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { ChevronLeft } from "lucide-react";
-import { CustomerSidebarProps } from "./(sidebar)/types";
 import ProfileSection from "./(sidebar)/ProfileSection";
 import StatsSection from "./(sidebar)/StatsSection";
 import NavigationLinks from "./(sidebar)/NavigationLinks";
+import { SessionUser } from "@/app/SessionProvider";
 
-export default function CustomerSidebar({ user }: CustomerSidebarProps) {
+// Define props interface directly in the file
+interface CustomerSidebarProps {
+  user: SessionUser;
+  orderCount: number;
+}
+
+export default function CustomerSidebar({
+  user,
+  orderCount,
+}: CustomerSidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   useEffect(() => {
@@ -34,7 +43,7 @@ export default function CustomerSidebar({ user }: CustomerSidebarProps) {
         <ProfileSection user={user} isCollapsed={isCollapsed} />
 
         {/* Stats Section */}
-        {!isCollapsed && <StatsSection />}
+        {!isCollapsed && <StatsSection orderCount={orderCount} />}
 
         {/* Navigation Links */}
         <NavigationLinks isCollapsed={isCollapsed} />
