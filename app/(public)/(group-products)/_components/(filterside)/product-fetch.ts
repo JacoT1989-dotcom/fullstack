@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { ProductActionResult } from "./types";
+import { validateRequest } from "@/auth";
 
 /**
  * Fetches all products from the database with their variations,
@@ -82,10 +83,11 @@ export async function getAllProducts(): Promise<ProductActionResult> {
 
 /**
  * Fetches a single product by ID with its variations
+ * Also checks if the variations are in the user's wishlist
  */
 export async function getProductById(
   productId: string,
-): Promise<ProductActionResult> {
+): Promise<ProductActionResult & { wishlistStatus?: Record<string, boolean> }> {
   try {
     const product = await prisma.product.findUnique({
       where: {
@@ -132,9 +134,46 @@ export async function getProductById(
       variations: Variation,
     };
 
+    // Check if the user is logged in using Lucia auth
+    const { user } = await validateRequest();
+    let wishlistStatus: Record<string, boolean> = {};
+
+    if (user) {
+      const userId = user.id;
+
+      // Find the user's wishlist
+      const wishlist = await prisma.wishlist.findUnique({
+        where: { userId },
+        include: {
+          items: {
+            select: {
+              variationId: true,
+            },
+          },
+        },
+      });
+
+      if (wishlist) {
+        // Create a map of variation IDs to wishlist status
+        const wishlistVariationIds = new Set(
+          wishlist.items.map((item) => item.variationId),
+        );
+
+        // Set wishlist status for each variation
+        wishlistStatus = Variation.reduce(
+          (acc, variation) => {
+            acc[variation.id] = wishlistVariationIds.has(variation.id);
+            return acc;
+          },
+          {} as Record<string, boolean>,
+        );
+      }
+    }
+
     return {
       success: true,
       product: transformedProduct,
+      wishlistStatus,
     };
   } catch (error) {
     console.error(`Server Error fetching product with ID ${productId}:`, error);

@@ -18,25 +18,28 @@ export type PriceRange = {
   label: string;
 };
 
-// Define the store state type
+// Define the store state type with wishlist integration
 interface ProductState {
   allProducts: ProductWithVariations[];
-  currentProduct: ProductWithVariations | null; // Add current product state
+  currentProduct: ProductWithVariations | null;
   isLoading: boolean;
-  isLoadingProduct: boolean; // Add loading state for individual product
+  isLoadingProduct: boolean;
   error: string | null;
-  productError: string | null; // Add error state for individual product
+  productError: string | null;
+
+  // Wishlist status for the current product
+  currentProductWishlistStatus: Record<string, boolean>;
 
   // Filter states
   categoryFilter: ProductCategory | "all";
   priceRangeFilter: PriceRange | null;
   stockStatusFilter: StockStatus;
-  colorFilters: string[]; // Array of colors
-  sizeFilters: string[]; // Changed from string | null to string[]
+  colorFilters: string[];
+  sizeFilters: string[];
 
   // Available filter options (derived from actual data)
   availableColors: string[];
-  availableSizes: string[]; // Added to track available sizes
+  availableSizes: string[];
 
   // Predefined price ranges
   priceRanges: PriceRange[];
@@ -45,15 +48,24 @@ interface ProductState {
   fetchProducts: () => Promise<void>;
   fetchProductById: (
     productId: string,
-  ) => Promise<ProductWithVariations | null>; // Add new action
-  clearCurrentProduct: () => void; // Add action to clear current product
+  ) => Promise<ProductWithVariations | null>;
+  clearCurrentProduct: () => void;
   setCategoryFilter: (category: ProductCategory | "all") => void;
   setPriceRangeFilter: (priceRange: PriceRange | null) => void;
   setStockStatusFilter: (status: StockStatus) => void;
   setColorFilters: (colors: string[]) => void;
   toggleColorFilter: (color: string) => void;
-  setSizeFilters: (sizes: string[]) => void; // Changed to accept array of sizes
-  toggleSizeFilter: (size: string) => void; // Added to toggle a size filter
+  setSizeFilters: (sizes: string[]) => void;
+  toggleSizeFilter: (size: string) => void;
+
+  // Set wishlist status for current product's variations
+  setCurrentProductWishlistStatus: (status: Record<string, boolean>) => void;
+
+  // Update wishlist status for a specific variation
+  updateVariationWishlistStatus: (
+    variationId: string,
+    isInWishlist: boolean,
+  ) => void;
 
   // Getters for filtered products
   getFilteredProducts: (pathname?: string) => ProductWithVariations[];
@@ -145,20 +157,23 @@ export const useProductStore = create<ProductState>()(
       (set, get) => ({
         // Initial state
         allProducts: [],
-        currentProduct: null, // Initialize current product as null
+        currentProduct: null,
         isLoading: false,
-        isLoadingProduct: false, // Initialize loading state for individual product
+        isLoadingProduct: false,
         error: null,
-        productError: null, // Initialize error state for individual product
+        productError: null,
+
+        // Wishlist status for current product
+        currentProductWishlistStatus: {},
 
         categoryFilter: "all",
         priceRangeFilter: null,
         stockStatusFilter: "all",
-        colorFilters: [], // Array of colors
-        sizeFilters: [], // Changed from null to empty array
+        colorFilters: [],
+        sizeFilters: [],
 
         availableColors: [],
-        availableSizes: [], // Added to track available sizes
+        availableSizes: [],
 
         priceRanges: [
           { min: 0, max: 500, label: "Under R500" },
@@ -208,12 +223,14 @@ export const useProductStore = create<ProductState>()(
           }
         },
 
-        // New action to fetch a single product by ID
+        // New action to fetch a single product by ID with wishlist status
         fetchProductById: async (productId: string) => {
           set({ isLoadingProduct: true, productError: null });
 
           try {
-            const result: ProductActionResult = await getProductById(productId);
+            const result: ProductActionResult & {
+              wishlistStatus?: Record<string, boolean>;
+            } = await getProductById(productId);
 
             if (!result.success || !result.product) {
               throw new Error(result.error || "Failed to fetch product");
@@ -221,6 +238,7 @@ export const useProductStore = create<ProductState>()(
 
             set({
               currentProduct: result.product,
+              currentProductWishlistStatus: result.wishlistStatus || {},
               isLoadingProduct: false,
             });
 
@@ -240,7 +258,25 @@ export const useProductStore = create<ProductState>()(
         },
 
         // Action to clear the current product
-        clearCurrentProduct: () => set({ currentProduct: null }),
+        clearCurrentProduct: () =>
+          set({
+            currentProduct: null,
+            currentProductWishlistStatus: {},
+          }),
+
+        // Action to set wishlist status for current product
+        setCurrentProductWishlistStatus: (status: Record<string, boolean>) =>
+          set({ currentProductWishlistStatus: status }),
+
+        // Action to update wishlist status for a specific variation
+        updateVariationWishlistStatus: (
+          variationId: string,
+          isInWishlist: boolean,
+        ) => {
+          const currentStatus = { ...get().currentProductWishlistStatus };
+          currentStatus[variationId] = isInWishlist;
+          set({ currentProductWishlistStatus: currentStatus });
+        },
 
         setCategoryFilter: (category) => set({ categoryFilter: category }),
         setPriceRangeFilter: (priceRange) =>
@@ -356,7 +392,7 @@ export const useProductStore = create<ProductState>()(
           priceRangeFilter: state.priceRangeFilter,
           stockStatusFilter: state.stockStatusFilter,
           colorFilters: state.colorFilters,
-          sizeFilters: state.sizeFilters, // Updated from sizeFilter to sizeFilters
+          sizeFilters: state.sizeFilters,
           // We don't persist currentProduct as it should be fetched fresh
         }),
       },

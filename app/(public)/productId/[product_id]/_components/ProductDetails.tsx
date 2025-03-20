@@ -2,12 +2,13 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner"; // Changed from react-hot-toast to sonner
+import { toast } from "sonner";
 import { useProductDetails } from "../useProductDetails";
 import { useProductStore } from "../../../(group-products)/_components/_store/product-store";
 import ProductImage from "./ProductImage";
 import VariationSelector from "./VariationSelector";
 import ProductStatus from "./ProductStatus";
+import WishlistButton from "./WishlistButton";
 
 // Define types
 interface Variation {
@@ -238,7 +239,17 @@ export default function ProductDetails({
   if (!product.variations || product.variations.length === 0) {
     return (
       <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+        <div className="bg-white rounded-lg shadow-sm border overflow-hidden relative">
+          {/* Wishlist button in top right corner of the card */}
+          <div className="absolute top-2 right-2 z-10">
+            {product.id && (
+              <WishlistButton
+                variationId={product.id}
+                productName={product.productName}
+              />
+            )}
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[600px]">
             {/* Product Image */}
             <div className="p-4 h-full flex items-center">
@@ -340,7 +351,17 @@ export default function ProductDetails({
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+      <div className="bg-white rounded-lg shadow-sm border overflow-hidden relative">
+        {/* Wishlist button in top right corner of the card */}
+        <div className="absolute top-2 right-2 z-10">
+          {currentVariation && (
+            <WishlistButton
+              variationId={currentVariation.id}
+              productName={product.productName}
+            />
+          )}
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Product Image - Left Column */}
           <div className="p-4 h-full flex items-center">
