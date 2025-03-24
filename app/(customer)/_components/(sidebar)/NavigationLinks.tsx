@@ -8,110 +8,74 @@ import {
   Settings,
   HelpCircle,
 } from "lucide-react";
-import { NavigationLinksProps } from "./types";
 
-export default function NavigationLinks({ isCollapsed }: NavigationLinksProps) {
+// Update the interface to include currentPath
+interface NavigationLinksProps {
+  isCollapsed: boolean;
+  currentPath?: string; // Make it optional for backward compatibility
+}
+
+export default function NavigationLinks({
+  isCollapsed,
+  currentPath = "",
+}: NavigationLinksProps) {
+  // Helper function to determine if a link is active
+  const isActive = (href: string) => {
+    if (!currentPath) return false;
+    // Check if currentPath starts with href to handle nested routes
+    // For home path, do an exact match to avoid highlighting home for all routes
+    return href === "/" ? currentPath === "/" : currentPath.startsWith(href);
+  };
+
+  // Navigation items array for cleaner code and easier maintenance
+  const navItems = [
+    {
+      href: "/",
+      icon: UserIcon,
+      label: "Go To Home",
+      tooltipLabel: "My Account",
+    },
+    { href: "/customer/orders", icon: ShoppingBag, label: "My Orders" },
+    { href: "/customer/wishlist", icon: Heart, label: "Wishlist" },
+    { href: "/customer/subscriptions", icon: Calendar, label: "Subscriptions" },
+    {
+      href: "/customer/payment-methods",
+      icon: CreditCard,
+      label: "Payment Methods",
+    },
+    { href: "/customer/settings", icon: Settings, label: "Settings" },
+    { href: "/customer/support", icon: HelpCircle, label: "Support" },
+  ];
+
   return (
     <nav className="py-4">
       <ul>
-        <li className="relative group">
-          <Link
-            href="/"
-            className={`flex items-center py-3 ${isCollapsed ? "justify-center px-0" : "px-6"} hover:bg-slate-600 transition`}
-          >
-            <UserIcon className={isCollapsed ? "" : "mr-3"} size={20} />
-            {!isCollapsed && <span>Go To Home</span>}
-            {isCollapsed && (
-              <div className="absolute left-full ml-2 px-2 py-1 bg-slate-800 rounded text-sm whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity">
-                My Account
-              </div>
-            )}
-          </Link>
-        </li>
-        <li className="relative group">
-          <Link
-            href="/customer/orders"
-            className={`flex items-center py-3 ${isCollapsed ? "justify-center px-0" : "px-6"} hover:bg-slate-600 transition`}
-          >
-            <ShoppingBag className={isCollapsed ? "" : "mr-3"} size={20} />
-            {!isCollapsed && <span>My Orders</span>}
-            {isCollapsed && (
-              <div className="absolute left-full ml-2 px-2 py-1 bg-slate-800 rounded text-sm whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity">
-                My Orders
-              </div>
-            )}
-          </Link>
-        </li>
-        <li className="relative group">
-          <Link
-            href="/customer/wishlist"
-            className={`flex items-center py-3 ${isCollapsed ? "justify-center px-0" : "px-6"} hover:bg-slate-600 transition`}
-          >
-            <Heart className={isCollapsed ? "" : "mr-3"} size={20} />
-            {!isCollapsed && <span>Wishlist</span>}
-            {isCollapsed && (
-              <div className="absolute left-full ml-2 px-2 py-1 bg-slate-800 rounded text-sm whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity">
-                Wishlist
-              </div>
-            )}
-          </Link>
-        </li>
-        <li className="relative group">
-          <Link
-            href="/customer/subscriptions"
-            className={`flex items-center py-3 ${isCollapsed ? "justify-center px-0" : "px-6"} hover:bg-slate-600 transition`}
-          >
-            <Calendar className={isCollapsed ? "" : "mr-3"} size={20} />
-            {!isCollapsed && <span>Subscriptions</span>}
-            {isCollapsed && (
-              <div className="absolute left-full ml-2 px-2 py-1 bg-slate-800 rounded text-sm whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity">
-                Subscriptions
-              </div>
-            )}
-          </Link>
-        </li>
-        <li className="relative group">
-          <Link
-            href="/customer/payment-methods"
-            className={`flex items-center py-3 ${isCollapsed ? "justify-center px-0" : "px-6"} hover:bg-slate-600 transition`}
-          >
-            <CreditCard className={isCollapsed ? "" : "mr-3"} size={20} />
-            {!isCollapsed && <span>Payment Methods</span>}
-            {isCollapsed && (
-              <div className="absolute left-full ml-2 px-2 py-1 bg-slate-800 rounded text-sm whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity">
-                Payment Methods
-              </div>
-            )}
-          </Link>
-        </li>
-        <li className="relative group">
-          <Link
-            href="/customer/settings"
-            className={`flex items-center py-3 ${isCollapsed ? "justify-center px-0" : "px-6"} hover:bg-slate-600 transition`}
-          >
-            <Settings className={isCollapsed ? "" : "mr-3"} size={20} />
-            {!isCollapsed && <span>Settings</span>}
-            {isCollapsed && (
-              <div className="absolute left-full ml-2 px-2 py-1 bg-slate-800 rounded text-sm whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity">
-                Settings
-              </div>
-            )}
-          </Link>
-        </li>
-        <li className="relative group">
-          <Link
-            href="/customer/support"
-            className={`flex items-center py-3 ${isCollapsed ? "justify-center px-0" : "px-6"} hover:bg-slate-600 transition`}
-          >
-            <HelpCircle className={isCollapsed ? "" : "mr-3"} size={20} />
-            {!isCollapsed && <span>Support</span>}
-            {isCollapsed && (
-              <div className="absolute left-full ml-2 px-2 py-1 bg-slate-800 rounded text-sm whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity">
-                Support
-              </div>
-            )}
-          </Link>
-        </li>
+        {navItems.map((item) => {
+          const active = isActive(item.href);
+          const Icon = item.icon;
+          const tooltipLabel = item.tooltipLabel || item.label;
+
+          return (
+            <li key={item.href} className="relative group">
+              <Link
+                href={item.href}
+                className={`flex items-center py-3 ${
+                  isCollapsed ? "justify-center px-0" : "px-6"
+                } hover:bg-slate-600 transition ${
+                  active ? "bg-slate-600 border-l-4 border-teal-500" : ""
+                }`}
+              >
+                <Icon className={isCollapsed ? "" : "mr-3"} size={20} />
+                {!isCollapsed && <span>{item.label}</span>}
+                {isCollapsed && (
+                  <div className="absolute left-full ml-2 px-2 py-1 bg-slate-800 rounded text-sm whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity">
+                    {tooltipLabel}
+                  </div>
+                )}
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </nav>
   );

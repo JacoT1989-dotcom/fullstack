@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { ChevronLeft } from "lucide-react";
+import { usePathname } from "next/navigation"; // Import usePathname hook
 import ProfileSection from "./(sidebar)/ProfileSection";
 import StatsSection from "./(sidebar)/StatsSection";
 import NavigationLinks from "./(sidebar)/NavigationLinks";
@@ -21,6 +22,7 @@ export default function CustomerSidebar({
   wishlistCount,
 }: CustomerSidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const pathname = usePathname(); // Get current pathname
 
   useEffect(() => {
     // Update main content margin based on sidebar state
@@ -49,8 +51,8 @@ export default function CustomerSidebar({
           <StatsSection orderCount={orderCount} wishlistCount={wishlistCount} />
         )}
 
-        {/* Navigation Links */}
-        <NavigationLinks isCollapsed={isCollapsed} />
+        {/* Navigation Links - pass current pathname */}
+        <NavigationLinks isCollapsed={isCollapsed} currentPath={pathname} />
       </aside>
 
       {/* Toggle Button - moved down by 80px */}
