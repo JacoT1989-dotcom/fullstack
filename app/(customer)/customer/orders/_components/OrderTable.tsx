@@ -1,14 +1,18 @@
 "use client";
 import React, { useState } from "react";
-import Link from "next/link";
 import { formatDistance } from "date-fns";
 import { OrderStatus } from "@prisma/client";
-import { OrderTableProps } from "../types";
+import { OrderTableProps, OrderWithItems } from "../types";
+import OrderDetailModal from "./OrderDetailModal";
 
 const OrderTable: React.FC<OrderTableProps> = ({ orders }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<OrderStatus | "ALL">("ALL");
   const [startDate, setStartDate] = useState<string>("");
+  const [selectedOrder, setSelectedOrder] = useState<OrderWithItems | null>(
+    null,
+  );
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Helper function to get status badge color
   const getStatusColor = (status: OrderStatus) => {
@@ -51,6 +55,17 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders }) => {
     } else {
       return "Unnamed Product";
     }
+  };
+
+  // Handle view details click
+  const handleViewDetails = (order: OrderWithItems) => {
+    setSelectedOrder(order);
+    setIsModalOpen(true);
+  };
+
+  // Close modal
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
   };
 
   // Filter orders based on search, status, and date
@@ -276,12 +291,12 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders }) => {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <Link
-                      href={`/account/orders/${order.id}`}
+                    <button
+                      onClick={() => handleViewDetails(order)}
                       className="text-indigo-600 hover:text-indigo-900 font-medium"
                     >
                       View Details
-                    </Link>
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -289,6 +304,13 @@ const OrderTable: React.FC<OrderTableProps> = ({ orders }) => {
           </table>
         </div>
       )}
+
+      {/* Order Detail Modal */}
+      <OrderDetailModal
+        order={selectedOrder}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
     </div>
   );
 };
