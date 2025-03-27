@@ -59,6 +59,8 @@ export default async function TierApplicationPage() {
           <h2 className="text-xl font-semibold mb-4">
             Apply for a Higher Tier
           </h2>
+
+          {/* Only show the pending application notice if there is actually a pending application */}
           {tierStatusResult.latestApplication && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-6">
               <p className="text-sm text-yellow-800">
@@ -69,6 +71,7 @@ export default async function TierApplicationPage() {
               </p>
             </div>
           )}
+
           <TierApplicationForm
             currentTier={tierStatusResult.currentTier}
             lastAppliedTier={appliedTierResult.appliedTier || undefined}

@@ -20,6 +20,14 @@ export async function getAppliedTier() {
   }
 
   try {
+    // Get user's current tier
+    const userData = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { tier: true },
+    });
+
+    const currentTier = userData?.tier || "BRONZE";
+
     // Get the most recent tier application for this user
     const latestApplication = await prisma.tierAppForm.findFirst({
       where: { userId: user.id },
@@ -27,9 +35,16 @@ export async function getAppliedTier() {
       select: { package: true },
     });
 
+    // Only return the applied tier if it doesn't match the current tier
+    // If they match, it means the application was approved
+    const pendingTier =
+      latestApplication && latestApplication.package !== currentTier
+        ? latestApplication.package
+        : null;
+
     return {
       success: true,
-      appliedTier: latestApplication?.package || null,
+      appliedTier: pendingTier,
     };
   } catch (error) {
     console.error("Error fetching applied tier:", error);

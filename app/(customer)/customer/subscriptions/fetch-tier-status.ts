@@ -36,15 +36,23 @@ export async function getUserTierStatus() {
       orderBy: { createdAt: "desc" },
     });
 
+    // Check if the latest application matches the current tier
+    // If it matches, the application was approved, so don't return it
+    const currentTier = userData?.tier || "BRONZE";
+    const showLatestApplication =
+      latestApplication && latestApplication.package !== currentTier
+        ? latestApplication
+        : null;
+
     return {
       success: true,
-      currentTier: userData?.tier || "BRONZE",
+      currentTier,
       user: {
         firstName: userData?.firstName,
         lastName: userData?.lastName,
         displayName: userData?.displayName,
       },
-      latestApplication,
+      latestApplication: showLatestApplication,
     };
   } catch (error) {
     console.error("Error fetching tier status:", error);
