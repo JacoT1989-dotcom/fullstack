@@ -64,7 +64,8 @@ export default function Navbar() {
     };
   }, [mobileMenuOpen, cartOpen]);
 
-  const routes = getRoutes();
+  // Get routes based on user authentication status
+  const routes = getRoutes(!!user);
 
   // This function handles dashboard navigation with a hard refresh
   const handleDashboardClick = (e: React.MouseEvent) => {

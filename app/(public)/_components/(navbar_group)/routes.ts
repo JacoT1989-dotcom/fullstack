@@ -3,10 +3,18 @@ export interface Route {
   path: string;
 }
 
-export const getRoutes = (): Route[] => [
-  { name: "Home", path: "/" },
-  { name: "Headwear", path: "/headwear" },
-  { name: "Apparel", path: "/apparel" },
-  { name: "All Collections", path: "/all-collections" },
-  { name: "My Dashboard", path: "/customer" },
-];
+export const getRoutes = (isLoggedIn = false): Route[] => {
+  const baseRoutes: Route[] = [
+    { name: "Home", path: "/" },
+    { name: "Headwear", path: "/headwear" },
+    { name: "Apparel", path: "/apparel" },
+    { name: "All Collections", path: "/all-collections" },
+  ];
+
+  // Only add the dashboard route if the user is logged in
+  if (isLoggedIn) {
+    baseRoutes.push({ name: "My Dashboard", path: "/customer" });
+  }
+
+  return baseRoutes;
+};
