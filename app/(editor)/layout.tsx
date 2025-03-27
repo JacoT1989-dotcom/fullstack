@@ -15,7 +15,7 @@ export default async function CustomerLayout({
   const session = await validateRequest();
 
   if (!session.user || session.user.role !== UserRole.EDITOR) {
-    redirect("/login");
+    redirect("/");
   }
 
   return (

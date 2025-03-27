@@ -20,7 +20,7 @@ export default async function AdminLayout({
     (session.user.role !== UserRole.ADMIN &&
       session.user.role !== UserRole.SUPERADMIN)
   ) {
-    redirect("/login");
+    redirect("/");
   }
 
   return (
