@@ -21,15 +21,6 @@ export default async function TierApplicationPage() {
     getAppliedTier(),
   ]);
 
-  console.log("SERVER PAGE: Tier Status:", {
-    currentTier: tierStatusResult.currentTier,
-    latestApplication: tierStatusResult.latestApplication,
-  });
-
-  console.log("SERVER PAGE: Applied Tier:", {
-    appliedTier: appliedTierResult.appliedTier,
-  });
-
   if (!tierStatusResult.success) {
     return (
       <div className="max-w-3xl mx-auto">
