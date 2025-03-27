@@ -16,6 +16,7 @@ model User {
     backgroundUrl          String?
     agreeTerms             Boolean                  @default(false)
     role                   UserRole                 @default(USER)
+    tier                   Tier                     @default(BRONZE)
     Session                Session[]
     Product                Product[] //admin and public
     Slide                  Slide[] //editor
@@ -25,6 +26,7 @@ model User {
     NewsletterSubscription NewsletterSubscription[]
     Audio                  Audio[]
     Order                  Order[]
+    TierAppForm            TierAppForm[]
     Cart                   Cart?
     Wishlist               Wishlist? // Relation to user's wishlist
 

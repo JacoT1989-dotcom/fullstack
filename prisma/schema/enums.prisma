@@ -33,3 +33,10 @@ enum Gender {
     UNISEX
     KIDS
 }
+
+enum Tier {
+    BRONZE
+    SILVER
+    GOLD
+    PLATINUM
+}
