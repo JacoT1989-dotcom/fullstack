@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useTransition } from "react";
 import { removeFromWishlist } from "@/app/(public)/(group-products)/_components/(filterside)/wish-list";
 import { formatCurrency } from "./formatCurrency";
+import { useTierDiscount } from "@/app/(public)/(group-products)/_components/(filterside)/tier-util";
 
 interface WishlistItemProps {
   item: {
@@ -32,6 +33,17 @@ interface WishlistItemProps {
 
 export default function WishlistItemCard({ item }: WishlistItemProps) {
   const [isPending, startTransition] = useTransition();
+  // Get tier discount information
+  const { hasDiscount, calculatePrice, userTier, discountPercentage } =
+    useTierDiscount();
+
+  // Format tier name for display
+  const tierName = userTier.charAt(0) + userTier.slice(1).toLowerCase();
+
+  // Get item price and calculate discounted price
+  const originalPrice =
+    item.variation.price || item.variation.product.sellingPrice;
+  const discountedPrice = calculatePrice(originalPrice);
 
   const handleRemove = () => {
     startTransition(async () => {
@@ -44,6 +56,13 @@ export default function WishlistItemCard({ item }: WishlistItemProps) {
   return (
     <div className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
       <div className="relative h-64 w-full">
+        {/* Add discount badge if user has a tier discount */}
+        {hasDiscount && (
+          <div className="absolute top-2 left-2 z-10 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-md">
+            {Math.round(discountPercentage * 100)}% {tierName} Discount
+          </div>
+        )}
+
         <Image
           src={item.variation.imageUrl || item.variation.product.productImgUrl}
           alt={item.variation.product.productName}
@@ -61,14 +80,28 @@ export default function WishlistItemCard({ item }: WishlistItemProps) {
           {item.variation.name && <p>Variation: {item.variation.name}</p>}
           {item.variation.color && <p>Color: {item.variation.color}</p>}
           {item.variation.size && <p>Size: {item.variation.size}</p>}
+          {hasDiscount && (
+            <p className="text-red-600 font-medium">
+              {tierName} tier price applies
+            </p>
+          )}
         </div>
 
         <div className="flex justify-between items-center">
-          <span className="font-bold text-lg">
-            {formatCurrency(
-              item.variation.price || item.variation.product.sellingPrice,
-            )}
-          </span>
+          {hasDiscount ? (
+            <div>
+              <span className="font-bold text-lg text-red-600">
+                {formatCurrency(discountedPrice)}
+              </span>
+              <span className="text-sm text-gray-500 line-through ml-2">
+                {formatCurrency(originalPrice)}
+              </span>
+            </div>
+          ) : (
+            <span className="font-bold text-lg">
+              {formatCurrency(originalPrice)}
+            </span>
+          )}
 
           <div className="flex gap-2">
             <button
