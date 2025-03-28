@@ -9,6 +9,7 @@ import ProductImage from "./ProductImage";
 import VariationSelector from "./VariationSelector";
 import ProductStatus from "./ProductStatus";
 import WishlistButton from "./WishlistButton";
+import { useTierDiscount } from "@/app/(public)/(group-products)/_components/(filterside)/tier-util";
 
 // Define types
 interface Variation {
@@ -56,6 +57,10 @@ export default function ProductDetails({
   >(null);
   const [quantity, setQuantity] = useState<number>(1);
   const [isAddingToCart, setIsAddingToCart] = useState<boolean>(false);
+
+  // Get tier discount information
+  const { hasDiscount, calculatePrice, userTier, discountPercentage } =
+    useTierDiscount();
 
   // Get store data
   const allProducts = useProductStore((state) => state.allProducts);
@@ -125,6 +130,17 @@ export default function ProductDetails({
       ) || null
     );
   }, [product, selectedColor, selectedSize]);
+
+  // Calculate discounted prices based on user tier
+  const discountedVariationPrice = useMemo(() => {
+    if (!currentVariation) return null;
+    return calculatePrice(currentVariation.price);
+  }, [currentVariation, calculatePrice]);
+
+  const discountedBasePrice = useMemo(() => {
+    if (!product) return null;
+    return calculatePrice(product.sellingPrice);
+  }, [product, calculatePrice]);
 
   // Set default selections when product loads, but don't reset quantity
   useEffect(() => {
@@ -222,6 +238,7 @@ export default function ProductDetails({
       setIsAddingToCart(false);
     }
   };
+
   // Check loading, error, and not found states
   const showStatus = !isStoreReady || isLoading || error || !product;
   if (showStatus) {
@@ -235,11 +252,21 @@ export default function ProductDetails({
     );
   }
 
+  // Format the tier name for display
+  const tierName = userTier.charAt(0) + userTier.slice(1).toLowerCase();
+
   // No variations
   if (!product.variations || product.variations.length === 0) {
     return (
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow-sm border overflow-hidden relative">
+          {/* Tier Discount Badge */}
+          {hasDiscount && (
+            <div className="absolute top-2 left-2 z-10 bg-red-600 text-white text-sm font-bold px-3 py-1 rounded-md">
+              {Math.round(discountPercentage * 100)}% {tierName} Discount
+            </div>
+          )}
+
           {/* Wishlist button in top right corner of the card */}
           <div className="absolute top-2 right-2 z-10">
             {product.id && (
@@ -264,14 +291,37 @@ export default function ProductDetails({
             {/* Product Details */}
             <div className="p-4">
               <h1 className="text-xl font-bold mb-2">{product.productName}</h1>
-              <p className="text-lg font-semibold mb-2">
-                R{(product.sellingPrice * quantity).toFixed(2)}
-                {quantity > 1 && (
-                  <span className="text-sm text-gray-600 ml-2">
-                    (R{product.sellingPrice.toFixed(2)} each)
-                  </span>
-                )}
-              </p>
+
+              {/* Price with discount if applicable */}
+              {hasDiscount ? (
+                <div className="mb-2">
+                  <p className="text-lg font-semibold text-red-600">
+                    R{(discountedBasePrice! * quantity).toFixed(2)}
+                    {quantity > 1 && (
+                      <span className="text-sm ml-2">
+                        (R{discountedBasePrice!.toFixed(2)} each)
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-sm text-gray-600 line-through">
+                    Original: R{(product.sellingPrice * quantity).toFixed(2)}
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    {tierName} member price (
+                    {Math.round(discountPercentage * 100)}% off)
+                  </p>
+                </div>
+              ) : (
+                <p className="text-lg font-semibold mb-2">
+                  R{(product.sellingPrice * quantity).toFixed(2)}
+                  {quantity > 1 && (
+                    <span className="text-sm text-gray-600 ml-2">
+                      (R{product.sellingPrice.toFixed(2)} each)
+                    </span>
+                  )}
+                </p>
+              )}
+
               <div className="mb-4 text-sm">
                 <p>{product.description}</p>
               </div>
@@ -352,6 +402,13 @@ export default function ProductDetails({
   return (
     <div className="max-w-4xl mx-auto">
       <div className="bg-white rounded-lg shadow-sm border overflow-hidden relative">
+        {/* Tier Discount Badge */}
+        {hasDiscount && (
+          <div className="absolute top-2 left-2 z-10 bg-red-600 text-white text-sm font-bold px-3 py-1 rounded-md">
+            {Math.round(discountPercentage * 100)}% {tierName} Discount
+          </div>
+        )}
+
         {/* Wishlist button in top right corner of the card */}
         <div className="absolute top-2 right-2 z-10">
           {currentVariation && (
@@ -377,22 +434,43 @@ export default function ProductDetails({
           <div className="p-4">
             <h1 className="text-xl font-bold mb-2">{product.productName}</h1>
 
-            <p className="text-lg font-semibold mb-2">
-              R
-              {(currentVariation
-                ? currentVariation.price * quantity
-                : product.sellingPrice * quantity
-              ).toFixed(2)}
-              {quantity > 1 && (
-                <span className="text-sm text-gray-600 ml-2">
-                  (R
-                  {(currentVariation?.price || product.sellingPrice).toFixed(
-                    2,
-                  )}{" "}
-                  each)
-                </span>
-              )}
-            </p>
+            {/* Price display with discount if applicable */}
+            {hasDiscount && currentVariation ? (
+              <div className="mb-2">
+                <p className="text-lg font-semibold text-red-600">
+                  R{(discountedVariationPrice! * quantity).toFixed(2)}
+                  {quantity > 1 && (
+                    <span className="text-sm ml-2">
+                      (R{discountedVariationPrice!.toFixed(2)} each)
+                    </span>
+                  )}
+                </p>
+                <p className="text-sm text-gray-600 line-through">
+                  Original: R{(currentVariation.price * quantity).toFixed(2)}
+                </p>
+                <p className="text-xs text-gray-600">
+                  {tierName} member price (
+                  {Math.round(discountPercentage * 100)}% off)
+                </p>
+              </div>
+            ) : (
+              <p className="text-lg font-semibold mb-2">
+                R
+                {(currentVariation
+                  ? currentVariation.price * quantity
+                  : product.sellingPrice * quantity
+                ).toFixed(2)}
+                {quantity > 1 && (
+                  <span className="text-sm text-gray-600 ml-2">
+                    (R
+                    {(currentVariation?.price || product.sellingPrice).toFixed(
+                      2,
+                    )}{" "}
+                    each)
+                  </span>
+                )}
+              </p>
+            )}
 
             <div className="mb-4 text-sm">
               <p>{product.description}</p>
@@ -416,6 +494,20 @@ export default function ProductDetails({
               <p>
                 Image: {selectedVariationImage?.split("/").pop() || "(default)"}
               </p>
+              {hasDiscount && (
+                <>
+                  <p>User Tier: {tierName}</p>
+                  <p>Discount: {Math.round(discountPercentage * 100)}%</p>
+                  <p>
+                    Original Price: R
+                    {currentVariation?.price.toFixed(2) || "N/A"}
+                  </p>
+                  <p>
+                    Discounted Price: R
+                    {discountedVariationPrice?.toFixed(2) || "N/A"}
+                  </p>
+                </>
+              )}
             </div>
 
             {/* Quantity Selector */}

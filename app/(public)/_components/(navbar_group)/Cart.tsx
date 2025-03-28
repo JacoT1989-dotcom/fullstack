@@ -6,6 +6,7 @@ import Link from "next/link";
 import { CloseIcon } from "./NavIcons";
 import { useCart } from "../../productId/cart/_store/use-cart-store-hooks";
 import { CartItemWithDetails } from "../../productId/cart/_store/cart-store";
+import { useTierDiscount } from "../../(group-products)/_components/(filterside)/tier-util";
 
 interface CartProps {
   isOpen: boolean;
@@ -17,11 +18,18 @@ const CartItemComponent = ({
   item,
   onUpdateQuantity,
   onRemove,
+  discountPercentage,
 }: {
   item: CartItemWithDetails;
   onUpdateQuantity: (id: string, quantity: number) => void;
   onRemove: (id: string) => void;
+  discountPercentage: number;
 }) => {
+  // Calculate discounted price
+  const originalPrice = item.variation.price;
+  const discountedPrice = originalPrice * (1 - discountPercentage);
+  const hasDiscount = discountPercentage > 0;
+
   return (
     <div className="flex gap-4 py-4 border-b border-gray-700">
       <div className="w-20 h-20 flex-shrink-0 bg-gray-800 rounded overflow-hidden">
@@ -57,7 +65,16 @@ const CartItemComponent = ({
         </Link>
         <p className="text-sm text-gray-400">{item.variation.name}</p>
         <div className="mt-2 flex justify-between items-center">
-          <div className="text-red-400">R{item.variation.price.toFixed(2)}</div>
+          {hasDiscount ? (
+            <div>
+              <div className="text-red-400">R{discountedPrice.toFixed(2)}</div>
+              <div className="text-xs text-gray-500 line-through">
+                R{originalPrice.toFixed(2)}
+              </div>
+            </div>
+          ) : (
+            <div className="text-red-400">R{originalPrice.toFixed(2)}</div>
+          )}
 
           <div className="flex items-center gap-2">
             <button
@@ -121,6 +138,12 @@ const Cart = ({ isOpen, onClose, cartRef }: CartProps) => {
     isEmpty,
   } = useCart();
 
+  // Get tier discount information
+  const { discountPercentage, hasDiscount, userTier } = useTierDiscount();
+
+  // Calculate discounted total price
+  const discountedTotalPrice = totalPrice * (1 - discountPercentage);
+
   // Reference to track if this is the first time opening
   const firstOpenRef = useRef(true);
 
@@ -136,6 +159,9 @@ const Cart = ({ isOpen, onClose, cartRef }: CartProps) => {
       }
     }
   }, [isOpen, refreshCart]);
+
+  // Format tier name for display
+  const tierName = userTier.charAt(0) + userTier.slice(1).toLowerCase();
 
   if (!isOpen) return null;
 
@@ -158,6 +184,14 @@ const Cart = ({ isOpen, onClose, cartRef }: CartProps) => {
             <CloseIcon />
           </button>
         </div>
+
+        {/* Display tier badge if user has a discount */}
+        {hasDiscount && (
+          <div className="mt-2 py-1 px-2 bg-red-600/20 border border-red-500/30 rounded text-sm text-red-400">
+            {tierName} tier: {Math.round(discountPercentage * 100)}% discount
+            applied
+          </div>
+        )}
       </div>
 
       {/* Cart Content */}
@@ -182,6 +216,7 @@ const Cart = ({ isOpen, onClose, cartRef }: CartProps) => {
                   item={item}
                   onUpdateQuantity={updateCartItem}
                   onRemove={removeCartItem}
+                  discountPercentage={discountPercentage}
                 />
               ))}
 
@@ -203,12 +238,35 @@ const Cart = ({ isOpen, onClose, cartRef }: CartProps) => {
       <div className="p-6 border-t border-gray-800">
         {!isEmpty && (
           <>
-            <div className="flex justify-between mb-4">
-              <span className="text-gray-300">Subtotal</span>
-              <span className="text-white font-medium">
-                R{totalPrice.toFixed(2)}
-              </span>
-            </div>
+            {hasDiscount ? (
+              <div className="mb-4">
+                <div className="flex justify-between mb-1">
+                  <span className="text-gray-300">Original Subtotal</span>
+                  <span className="text-gray-400 line-through">
+                    R{totalPrice.toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between mb-1">
+                  <span className="text-gray-300">{tierName} Discount</span>
+                  <span className="text-red-400">
+                    -R{(totalPrice - discountedTotalPrice).toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between font-medium">
+                  <span className="text-white">Final Subtotal</span>
+                  <span className="text-white">
+                    R{discountedTotalPrice.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="flex justify-between mb-4">
+                <span className="text-gray-300">Subtotal</span>
+                <span className="text-white font-medium">
+                  R{totalPrice.toFixed(2)}
+                </span>
+              </div>
+            )}
 
             <Link
               href="/checkout"

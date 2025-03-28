@@ -10,6 +10,16 @@ import {
   PlaceOrderResponse,
   GetOrderDetailsResponse,
 } from "./order-types";
+import { TIER_DISCOUNTS } from "../(group-products)/_components/(filterside)/tier-util";
+
+// Define tier discounts directly in the server component to avoid client/server module issues
+
+// Calculate the discounted price based on user tier
+function calculateDiscountedPrice(price: number, tier: string): number {
+  const discountPercentage =
+    TIER_DISCOUNTS[tier as keyof typeof TIER_DISCOUNTS] || 0;
+  return price * (1 - discountPercentage);
+}
 
 /**
  * Server action to place an order with items from the user's cart
@@ -55,19 +65,53 @@ export async function placeOrder(
       };
     }
 
-    // Calculate total order amount
-    const totalAmount = cart.cartItems.reduce(
+    // Get user's tier for discount calculation
+    const userWithTier = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { tier: true },
+    });
+
+    const userTier = userWithTier?.tier || "BRONZE";
+
+    // Calculate total order amount with tier discount applied
+    const originalTotalAmount = cart.cartItems.reduce(
       (sum, item) => sum + item.variation.price * item.quantity,
       0,
     );
 
+    // Apply tier discount to total amount
+    const totalAmount = cart.cartItems.reduce(
+      (sum, item) =>
+        sum +
+        calculateDiscountedPrice(item.variation.price, userTier) *
+          item.quantity,
+      0,
+    );
+
+    // Calculate the discount amount
+    const discountAmount = originalTotalAmount - totalAmount;
+
     // Start a transaction to ensure all operations succeed or fail together
     return await prisma.$transaction(async (tx) => {
       // 1. Create the order
+      // Store the original amount and discount info in orderNotes since schema doesn't have those fields
+      const discountInfo = {
+        originalAmount: originalTotalAmount,
+        discountAmount: discountAmount,
+        tierApplied: userTier,
+        discountPercentage:
+          TIER_DISCOUNTS[userTier as keyof typeof TIER_DISCOUNTS] * 100,
+      };
+
+      const orderNotes = validatedData.orderNotes
+        ? `${validatedData.orderNotes}\n\n--- System Notes ---\n${JSON.stringify(discountInfo)}`
+        : `--- System Notes ---\n${JSON.stringify(discountInfo)}`;
+
       const order = await tx.order.create({
         data: {
           ...validatedData,
-          totalAmount,
+          totalAmount, // This is already the discounted amount
+          orderNotes,
           userId: user.id,
           status: "PENDING",
         },
@@ -76,13 +120,19 @@ export async function placeOrder(
       // 2. Create order items from cart items
       await Promise.all(
         cart.cartItems.map(async (cartItem) => {
-          // Create the order item
+          const originalPrice = cartItem.variation.price;
+          const discountedPrice = calculateDiscountedPrice(
+            originalPrice,
+            userTier,
+          );
+
+          // Create the order item - store only what the schema allows
           await tx.orderItem.create({
             data: {
               orderId: order.id,
               variationId: cartItem.variationId,
               quantity: cartItem.quantity,
-              price: cartItem.variation.price,
+              price: discountedPrice, // Store the discounted price
             },
           });
 
