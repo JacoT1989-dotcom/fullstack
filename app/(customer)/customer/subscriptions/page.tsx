@@ -1,9 +1,9 @@
 import React from "react";
-import TierApplicationForm from "./TierApplicationForm";
+import TierApplicationForm from "./_components/TierApplicationForm";
 import { Metadata } from "next";
-import { getUserTierStatus } from "./fetch-tier-status";
-import CurrentTierStatus from "./CurrentTierStatus";
-import { getAppliedTier } from "./get-applied-tier";
+import { getUserTierStatus } from "./_actions/fetch-tier-status";
+import CurrentTierStatus from "./_components/CurrentTierStatus";
+import { getAppliedTier } from "./_actions/get-applied-tier";
 
 export const metadata: Metadata = {
   title: "Membership Tier | Customer Dashboard",

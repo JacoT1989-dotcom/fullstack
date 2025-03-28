@@ -6,9 +6,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 import { Medal } from "lucide-react";
-import { TierApplicationFormData, TierPackage } from "./types";
-import { tierApplicationSchema } from "./validations";
-import { submitTierApplication } from "./actions";
+import { TierApplicationFormData, TierPackage } from "../types";
+import { tierApplicationSchema } from "../validations";
+import { submitTierApplication } from "../_actions/actions";
 
 // Types for the component props
 type TierApplicationFormProps = {

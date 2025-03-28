@@ -4,7 +4,7 @@ import { Lucia, Session, User } from "lucia";
 import { cookies } from "next/headers";
 import { cache } from "react";
 import prisma from "./lib/prisma";
-import { UserRole } from "@prisma/client";
+import { UserRole, Tier } from "@prisma/client";
 
 const adapter = new PrismaAdapter(prisma.session, prisma.user);
 
@@ -26,6 +26,7 @@ interface DatabaseUserAttributes {
   backgroundUrl: string | null;
   agreeTerms: boolean;
   role: UserRole;
+  tier: Tier; // Added tier here
 }
 
 export const lucia = new Lucia(adapter, {
@@ -52,6 +53,7 @@ export const lucia = new Lucia(adapter, {
       avatarUrl: attributes.avatarUrl,
       backgroundUrl: attributes.backgroundUrl,
       role: attributes.role,
+      tier: attributes.tier, // Added tier here
     };
   },
 });

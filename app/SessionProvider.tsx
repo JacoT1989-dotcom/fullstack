@@ -11,6 +11,8 @@ export type UserRole =
   | "ADMIN"
   | "SUPERADMIN";
 
+export type UserTier = "BRONZE" | "SILVER" | "GOLD" | "PLATINUM";
+
 export interface SessionUser {
   id: string;
   username: string;
@@ -22,6 +24,7 @@ export interface SessionUser {
   avatarUrl: string | null;
   backgroundUrl: string | null;
   role: UserRole;
+  tier: UserTier;  // Make sure tier is included here
 }
 
 export interface SessionWithUser extends LuciaSession {

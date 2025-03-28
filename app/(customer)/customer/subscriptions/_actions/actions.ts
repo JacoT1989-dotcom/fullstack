@@ -6,8 +6,8 @@ import { z } from "zod";
 import {
   type TierApplicationFormData,
   type TierApplicationResponse,
-} from "./types";
-import { validateTierApplication } from "./validations";
+} from "../types";
+import { validateTierApplication } from "../validations";
 
 /**
  * Submits a new tier application for the authenticated customer

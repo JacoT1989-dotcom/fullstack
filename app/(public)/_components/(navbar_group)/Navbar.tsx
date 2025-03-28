@@ -12,6 +12,7 @@ import { getRoutes } from "./routes";
 import AuthModal from "@/app/(auth)/_components/AuthTabs";
 import { useCart } from "../../productId/cart/_store/use-cart-store-hooks";
 import { usePathname } from "next/navigation";
+import TierBadge from "./TierBadge"; // Import the TierBadge component
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -147,9 +148,16 @@ export default function Navbar() {
             </div>
           )}
 
-          {/* Auth Button */}
-          <div className="ml-2 text-gray-300">
-            {!user ? <AuthModal /> : <UserButton />}
+          {/* Auth Button with Tier Badge */}
+          <div className="ml-2 text-gray-300 flex items-center gap-2">
+            {!user ? (
+              <AuthModal />
+            ) : (
+              <>
+                <UserButton />
+                <TierBadge />
+              </>
+            )}
           </div>
         </div>
 
@@ -175,9 +183,16 @@ export default function Navbar() {
             </div>
           )}
 
-          {/* Auth Button - Mobile */}
-          <div className="text-gray-300">
-            {!user ? <AuthModal /> : <UserButton />}
+          {/* Auth Button with Tier Badge - Mobile */}
+          <div className="text-gray-300 flex items-center gap-2">
+            {!user ? (
+              <AuthModal />
+            ) : (
+              <>
+                <UserButton />
+                <TierBadge />
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Trigger */}
