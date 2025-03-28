@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useSession } from "@/app/SessionProvider";
 import UserButton from "../UserButton";
-import Cart from "./Cart";
+import Cart from "./(cart)/Cart";
 import MobileMenu from "./MobileMenu";
 import { MenuIcon, CartIcon } from "./NavIcons";
 import { getRoutes } from "./routes";
