@@ -61,16 +61,18 @@ const CartItem = ({
   };
 
   // Handle manual input change
+  // Handle manual input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value);
     if (!isNaN(value) && value >= 0) {
-      setLocalQuantity(Math.min(value, item.variation.quantity));
+      const newQuantity = Math.min(value, item.variation.quantity);
+      setLocalQuantity(newQuantity);
       hasChangedRef.current = true;
-      setHasUnsavedChanges(true);
+      setHasUnsavedChanges(newQuantity !== item.quantity);
     } else if (e.target.value === "") {
       setLocalQuantity(0);
       hasChangedRef.current = true;
-      setHasUnsavedChanges(true);
+      setHasUnsavedChanges(0 !== item.quantity);
     }
   };
 
@@ -94,9 +96,10 @@ const CartItem = ({
   // Handle increment with button hold functionality
   const handleIncrementStart = () => {
     if (localQuantity < item.variation.quantity) {
-      setLocalQuantity((prev) => prev + 1);
+      const newQuantity = localQuantity + 1;
+      setLocalQuantity(newQuantity);
       hasChangedRef.current = true;
-      setHasUnsavedChanges(true);
+      setHasUnsavedChanges(newQuantity !== item.quantity);
 
       // Start auto-increment after holding the button
       incrementTimerRef.current = setInterval(() => {
@@ -108,7 +111,7 @@ const CartItem = ({
             return item.variation.quantity;
           }
           hasChangedRef.current = true;
-          setHasUnsavedChanges(true);
+          setHasUnsavedChanges(newValue !== item.quantity);
           return newValue;
         });
       }, 150); // Adjust speed of auto-increment
@@ -118,9 +121,10 @@ const CartItem = ({
   // Handle decrement with button hold functionality
   const handleDecrementStart = () => {
     if (localQuantity > 1) {
-      setLocalQuantity((prev) => prev - 1);
+      const newQuantity = localQuantity - 1;
+      setLocalQuantity(newQuantity);
       hasChangedRef.current = true;
-      setHasUnsavedChanges(true);
+      setHasUnsavedChanges(newQuantity !== item.quantity);
 
       // Start auto-decrement after holding the button
       decrementTimerRef.current = setInterval(() => {
@@ -132,7 +136,7 @@ const CartItem = ({
             return 1;
           }
           hasChangedRef.current = true;
-          setHasUnsavedChanges(true);
+          setHasUnsavedChanges(newValue !== item.quantity);
           return newValue;
         });
       }, 150); // Adjust speed of auto-decrement
@@ -150,6 +154,9 @@ const CartItem = ({
       clearInterval(decrementTimerRef.current);
       decrementTimerRef.current = null;
     }
+
+    // Update the hasUnsavedChanges state based on actual difference
+    setHasUnsavedChanges(localQuantity !== item.quantity);
   };
 
   return (
