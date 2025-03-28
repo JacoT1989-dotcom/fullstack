@@ -7,6 +7,7 @@ import {
 import Image from "next/image";
 import { formatCurrency } from "./utils";
 import { Variation } from "../_components/(filterside)/types";
+import { useTierDiscount } from "../_components/(filterside)/tier-util";
 
 interface ProductCardProps {
   id: string;
@@ -31,6 +32,13 @@ export const ProductCard = ({
   // Always use the product's main image for the card
   const displayImage = productImgUrl;
 
+  // Get tier discount information
+  const { hasDiscount, calculatePrice, userTier, discountPercentage } =
+    useTierDiscount();
+
+  // Calculate the discounted price
+  const discountedPrice = calculatePrice(sellingPrice);
+
   return (
     <Card className="h-full flex flex-col hover:shadow-lg transition-shadow">
       <CardHeader className="p-0">
@@ -45,6 +53,13 @@ export const ProductCard = ({
                    (max-width: 1024px) 33vw,
                    25vw"
           />
+
+          {/* Display discount badge if user has a discount */}
+          {hasDiscount && (
+            <div className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-md">
+              {Math.round(discountPercentage * 100)}% OFF
+            </div>
+          )}
         </div>
       </CardHeader>
       <CardContent className="flex-grow p-4">
@@ -109,9 +124,23 @@ export const ProductCard = ({
         )}
       </CardContent>
       <CardFooter className="p-4 pt-0">
-        <p className="text-lg font-bold text-primary">
-          {formatCurrency(sellingPrice)}
-        </p>
+        {hasDiscount ? (
+          <div className="flex items-end gap-2">
+            <p className="text-lg font-bold text-red-600">
+              {formatCurrency(discountedPrice)}
+            </p>
+            <p className="text-sm text-gray-500 line-through">
+              {formatCurrency(sellingPrice)}
+            </p>
+            <span className="text-xs text-gray-600 ml-1">
+              {userTier.charAt(0) + userTier.slice(1).toLowerCase()} price
+            </span>
+          </div>
+        ) : (
+          <p className="text-lg font-bold text-primary">
+            {formatCurrency(sellingPrice)}
+          </p>
+        )}
       </CardFooter>
     </Card>
   );
