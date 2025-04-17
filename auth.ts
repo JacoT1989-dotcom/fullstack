@@ -15,7 +15,6 @@ interface DatabaseUserAttributes {
   lastName: string;
   displayName: string;
   email: string;
-  passwordHash: string;
   phoneNumber: string;
   streetAddress: string;
   suburb: string | null;
