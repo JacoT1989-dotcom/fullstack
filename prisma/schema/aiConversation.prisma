@@ -1,0 +1,15 @@
+model AiConversation {
+    id        String   @id @default(cuid())
+    userId    String? // Optional - for guest users
+    sessionId String // For tracking conversations
+    title     String? // Auto-generated conversation title
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    messages AiMessage[]
+
+    // Link to user if authenticated
+    user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@map("ai_conversations")
+}

@@ -27,6 +27,7 @@ model User {
     Audio                  Audio[]
     Order                  Order[]
     TierAppForm            TierAppForm[]
+    aiConversations        AiConversation[]
     Cart                   Cart?
     Wishlist               Wishlist? // Relation to user's wishlist
 
