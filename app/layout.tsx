@@ -3,6 +3,7 @@ import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import SessionProvider from "./SessionProvider";
 import { validateRequest } from "@/auth";
+import FloatingAiChat from "@/components/ai/FloatingAiChat";
 
 export default async function RootLayout({
   children,
@@ -23,6 +24,7 @@ export default async function RootLayout({
           >
             {children}
             <Toaster />
+            <FloatingAiChat />
           </ThemeProvider>
         </SessionProvider>
       </body>

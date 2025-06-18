@@ -11,7 +11,7 @@ export interface EcommerceContext {
   sessionId: string;
   userOrders?: any[];
   cartItems?: any[];
-  userPreferences?: any;
+  userTier?: string;
   currentPage?: string;
 }
 
@@ -31,17 +31,33 @@ Key guidelines:
 - Always prioritize customer satisfaction
 - If you need to access specific order or product data, ask for clarification
 - For sensitive account issues, direct users to customer service
-- Keep responses focused on ecommerce-related topics`;
+- Keep responses focused on ecommerce-related topics
+
+User Context:
+- User Tier: ${context.userTier || "Not specified"}
+- Current Page: ${context.currentPage || "Unknown"}`;
 
     // Add context-specific information
     let contextualPrompt = basePrompt;
 
     if (context.userOrders?.length) {
-      contextualPrompt += `\n\nRecent orders: ${JSON.stringify(context.userOrders.slice(-3))}`;
+      const orderSummary = context.userOrders.map((order) => ({
+        id: order.id,
+        status: order.status,
+        total: order.totalAmount,
+        itemCount: order.orderItems?.length || 0,
+      }));
+      contextualPrompt += `\n\nRecent orders: ${JSON.stringify(orderSummary)}`;
     }
 
     if (context.cartItems?.length) {
-      contextualPrompt += `\n\nCurrent cart: ${JSON.stringify(context.cartItems)}`;
+      const cartSummary = context.cartItems.map((item) => ({
+        product: item.variation?.product?.productName,
+        variation: `${item.variation?.color} ${item.variation?.size}`,
+        quantity: item.quantity,
+        price: item.variation?.price,
+      }));
+      contextualPrompt += `\n\nCurrent cart: ${JSON.stringify(cartSummary)}`;
     }
 
     return contextualPrompt;
@@ -97,7 +113,7 @@ Key guidelines:
 
       // Get AI response
       const response = await anthropic.messages.create({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-3-5-sonnet-20241022",
         max_tokens: 1000,
         system: await this.generateSystemPrompt(context),
         messages: messages,
@@ -115,7 +131,7 @@ Key guidelines:
           role: "assistant",
           content: aiResponse,
           metadata: {
-            model: "claude-sonnet-4-20250514",
+            model: "claude-3-5-sonnet-20241022",
             timestamp: new Date().toISOString(),
           },
         },
